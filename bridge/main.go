@@ -1,26 +1,32 @@
 package main
 
 import (
-	"bridge/nlclient"
-	"fmt"
+	"bridge/server"
+	"context"
+	"os"
+	"os/signal"
+	"syscall"
 )
 
-func Fatal(err error) {
-	if err != nil {
-		panic(err.Error())
-	}
+func main() {
+	srv, err := server.NewServer()
+	fatal(err)
+
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	go func() {
+		fatal(srv.Start())
+	}()
+
+	// Wait for system interrupt to gracefully shutdown the server
+	<-ctx.Done()
+
+	fatal(srv.Destroy())
 }
 
-func main() {
-	nl, err := nlclient.NewNetlinkClient()
-	Fatal(err)
-	defer nl.Destroy()
-
-	proctreeClient := nl.Proctree()
-	nodes, err := proctreeClient.Dump()
-	Fatal(err)
-
-	for _, node := range nodes {
-		fmt.Println(node)
+func fatal(err error) {
+	if err != nil {
+		panic(err.Error())
 	}
 }

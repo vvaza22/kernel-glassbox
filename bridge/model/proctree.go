@@ -32,6 +32,8 @@ func ParseProctreeNode(data []byte) (ProctreeNode, error) {
 		return node, fmt.Errorf("invalid data length for ProctreeNode: expected 48 bytes, got %d", len(data))
 	}
 
+	// TODO: Make a better parser
+
 	node.Parent.Pid = binary.LittleEndian.Uint32(data[0:4])
 	// Compiler pads 4 bytes to make the next field aligned to 8 bytes
 	node.Parent.StartTime = binary.LittleEndian.Uint64(data[8:16])

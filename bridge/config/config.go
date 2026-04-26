@@ -1,0 +1,3 @@
+package config
+
+const ListenAddress = "0.0.0.0:8080"
