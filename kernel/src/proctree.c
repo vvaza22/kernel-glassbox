@@ -6,32 +6,55 @@
 #include "gb_model.h"
 #include "gb_proctree.h"
 
-static void gb_proctree_read_process(struct gb_proctree_node *node,
-				     struct task_struct *task)
+static void gb_proctree_read_task(struct gb_proctree_node *node,
+				  struct task_struct *group_leader,
+				  struct task_struct *task)
 {
-	struct task_struct *parent = rcu_dereference(task->real_parent);
+	struct task_struct *parent = rcu_dereference(task->parent);
+	struct task_struct *real_parent = rcu_dereference(task->real_parent);
 
-	node->parent.pid = parent ? parent->pid : 0;
-	node->parent.start_time = parent ? parent->start_time : 0;
+	// parent
+	node->parent.pid = 0;
+	node->parent.start_time = 0;
+	if (parent) {
+		node->parent.pid = parent->pid;
+		node->parent.start_time = parent->start_time;
+	}
+
+	// real_parent
+	node->real_parent.pid = 0;
+	node->real_parent.start_time = 0;
+	if (real_parent) {
+		node->real_parent.pid = real_parent->pid;
+		node->real_parent.start_time = real_parent->start_time;
+	}
+
+	// group_leader
+	node->group_leader.pid = group_leader->pid;
+	node->group_leader.start_time = group_leader->start_time;
+
+	// self
 	node->self.pid = task->pid;
 	node->self.start_time = task->start_time;
-	// Process name
+
+	// task name
 	strncpy(node->name, task->comm, TASK_COMM_LEN);
 	node->name[TASK_COMM_LEN - 1] = '\0';
 }
 
-static void gb_proctree_read_processes(struct gb_proctree *tree)
+static void gb_proctree_read_tasks(struct gb_proctree *tree)
 {
-	struct task_struct *task;
+	struct task_struct *process, *thread;
 
 	rcu_read_lock();
-	for_each_process(task) {
+	for_each_process_thread(process, thread) {
 		if (tree->num_nodes >= tree->capacity) {
 			pr_warn("Reached maximum capacity of process tree, truncating...\n");
 			tree->truncated = true;
 			break;
 		}
-		gb_proctree_read_process(&tree->nodes[tree->num_nodes++], task);
+		gb_proctree_read_task(&tree->nodes[tree->num_nodes++], process,
+				      thread);
 	}
 	rcu_read_unlock();
 }
@@ -56,7 +79,7 @@ struct gb_proctree *gb_proctree_get(void)
 		return ERR_PTR(-ENOMEM);
 	}
 
-	gb_proctree_read_processes(tree);
+	gb_proctree_read_tasks(tree);
 
 	return tree;
 }
