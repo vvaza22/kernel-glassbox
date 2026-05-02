@@ -1,47 +1,47 @@
 package model
 
 import (
-	"bytes"
-	"encoding/binary"
+	"bridge/utils"
 	"fmt"
 )
 
 type TaskKey struct {
-	Pid       uint32
-	StartTime uint64
+	Pid       uint32 `json:"pid"`
+	StartTime uint64 `json:"startTime"`
 }
 
 func (tk TaskKey) String() string {
 	return fmt.Sprintf("(%d,%d)", tk.Pid, tk.StartTime)
 }
 
+func ReadTaskKey(parser utils.ByteParser) (TaskKey, error) {
+	var tk TaskKey
+	tk.Pid = parser.ReadUint32()
+	parser.Padding(4)
+	tk.StartTime = parser.ReadUint64()
+	return tk, parser.Error()
+}
+
 type ProctreeNode struct {
-	Parent TaskKey
-	Self   TaskKey
-	Name   string
+	Parent      TaskKey `json:"parent"`
+	RealParent  TaskKey `json:"realParent"`
+	GroupLeader TaskKey `json:"groupLeader"`
+	Self        TaskKey `json:"self"`
+	Name        string  `json:"name"`
 }
 
 func (n ProctreeNode) String() string {
 	return fmt.Sprintf("ProctreeNode{Parent: %s, Self: %s, Name: %s}", n.Parent, n.Self, n.Name)
 }
 
-func ParseProctreeNode(data []byte) (ProctreeNode, error) {
+func ReadProctreeNode(parser utils.ByteParser) (ProctreeNode, error) {
 	var node ProctreeNode
 
-	if len(data) != 48 {
-		return node, fmt.Errorf("invalid data length for ProctreeNode: expected 48 bytes, got %d", len(data))
-	}
+	node.Parent, _ = ReadTaskKey(parser)
+	node.RealParent, _ = ReadTaskKey(parser)
+	node.GroupLeader, _ = ReadTaskKey(parser)
+	node.Self, _ = ReadTaskKey(parser)
+	node.Name = parser.ReadString(16)
 
-	// TODO: Make a better parser
-
-	node.Parent.Pid = binary.LittleEndian.Uint32(data[0:4])
-	// Compiler pads 4 bytes to make the next field aligned to 8 bytes
-	node.Parent.StartTime = binary.LittleEndian.Uint64(data[8:16])
-
-	node.Self.Pid = binary.LittleEndian.Uint32(data[16:20])
-	node.Self.StartTime = binary.LittleEndian.Uint64(data[24:32])
-
-	node.Name = string(bytes.TrimRight(data[32:48], "\x00"))
-
-	return node, nil
+	return node, parser.Error()
 }

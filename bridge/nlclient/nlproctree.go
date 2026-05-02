@@ -2,6 +2,7 @@ package nlclient
 
 import (
 	"bridge/model"
+	"bridge/utils"
 
 	"github.com/mdlayher/genetlink"
 	"github.com/mdlayher/netlink"
@@ -58,8 +59,9 @@ func (p *proctreeClient) decodeDumpMessage(msg genetlink.Message) ([]model.Proct
 	}
 
 	for attrDecoder.Next() {
+		parser := utils.NewByteParser(attrDecoder.Bytes())
 		if attrDecoder.Type() == model.AttrProctreeNode {
-			node, err := model.ParseProctreeNode(attrDecoder.Bytes())
+			node, err := model.ReadProctreeNode(parser)
 			if err != nil {
 				return nil, err
 			}

@@ -32,7 +32,7 @@ func (a *app) AddClient(wsCtx *model.WSContext) ClientMessageListener {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 
-	handler := NewHandler(wsCtx)
+	handler := NewHandler(wsCtx, a.nlClient)
 	a.clients[handler.ID()] = handler
 
 	return handler
