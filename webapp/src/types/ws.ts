@@ -7,7 +7,25 @@ export enum WSMsgType {
   WSMsgClientReqProctreeDump = 1001,
 }
 
-export interface WSMessage<T = any> {
+export interface WSMessage {
   type: WSMsgType;
-  payload: T;
+  payload: any;
+}
+
+export type ListenerFn = (payload: any) => void;
+
+export function isWSMessage(obj: any): obj is WSMessage {
+  return (
+    obj !== null &&
+    typeof obj === "object" &&
+    typeof obj.type === "number" &&
+    "payload" in obj
+  );
+}
+
+export enum WSStatus {
+  Disconnected,
+  Connecting,
+  Connected,
+  Error,
 }
