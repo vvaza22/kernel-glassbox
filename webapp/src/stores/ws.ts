@@ -9,7 +9,7 @@ type WSStore = {
   status: WSStatus;
   connect: () => void;
   disconnect: () => void;
-  send: (data: any) => void;
+  send: (data: WSMessage) => void;
   subscribe: (msgType: WSMsgType, callback: ListenerFn) => () => void;
 };
 
@@ -64,6 +64,8 @@ export const useWSStore = create<WSStore>((set, get) => {
           return;
         }
 
+        debug("Received WS message:", data);
+
         handleMsg(data);
       };
     },
@@ -98,6 +100,8 @@ export const useWSStore = create<WSStore>((set, get) => {
         error("Send failed: no active WS connection");
         return;
       }
+
+      debug("Sending WS message:", msg);
 
       if (socket.readyState === WebSocket.OPEN) {
         socket.send(JSON.stringify(msg));

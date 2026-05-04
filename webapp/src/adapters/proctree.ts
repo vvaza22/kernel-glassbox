@@ -2,6 +2,7 @@ import type { ProctreeNode, TaskKey } from "@/types/ws/proctree";
 import type { SubTreeNode, TreeNode } from "@/types/ui/proctree";
 
 const toId = (key: TaskKey) => `${key.pid}-${key.startTime}`;
+export const kernelId = toId({ pid: 0, startTime: 0 });
 
 const isGroupLeader = (node: ProctreeNode) => {
   // A thread is a group leader, iff its self id matches its group leader id
@@ -69,7 +70,6 @@ export function toTreeNodes(nodes: ProctreeNode[]): TreeNode[] {
   const tgidToNodes = mapTgidToNodes(childThreads);
   const tgidToChildTgids = mapTgidToChildTgids(groupLeaders, tidToTgid);
 
-  const kernelId = toId({ pid: 0, startTime: 0 });
   const kernelNode: TreeNode = {
     id: kernelId,
     parentId: "",

@@ -1,10 +1,14 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import useProctree from "@/hooks/proctree";
 import Loader from "@/components/ui/Loader";
+import { kernelId } from "@/adapters/proctree";
 
 export default function ProctreeViewer() {
   const { t } = useTranslation("proctree");
-  const [loading, _] = useState(true);
+  const { loaded, nodes } = useProctree();
 
-  return loading && <Loader label={t("loading")} />;
+  const [expanded, setExpanded] = useState(new Set<string>([kernelId]));
+
+  return !loaded && <Loader label={t("loading")} />;
 }
