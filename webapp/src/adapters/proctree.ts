@@ -7,6 +7,11 @@ import type {
   SubNodeData,
 } from "@/types/ui/proctree";
 import { type Node, type Edge, Position } from "@xyflow/react";
+import {
+  LEADER_BASE_HEIGHT,
+  SUB_NODE_HEIGHT,
+  SUB_NODES_GAP,
+} from "@/config/proctree";
 
 const toId = (key: TaskKey) => `${key.pid}-${key.startTime}`;
 export const kernelId = toId({ pid: 0, startTime: 0 });
@@ -147,7 +152,10 @@ export function toFlowNodes(
         name: subNode.name,
         pid: subNode.pid,
       },
-      position: { x: 10, y: 60 + rankIndex * 30 },
+      position: {
+        x: 0,
+        y: LEADER_BASE_HEIGHT + SUB_NODES_GAP + rankIndex * SUB_NODE_HEIGHT,
+      },
       parentId: node.id,
       targetPosition: Position.Left,
       sourcePosition: Position.Right,

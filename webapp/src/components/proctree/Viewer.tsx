@@ -21,16 +21,21 @@ import { toFlowNodes } from "@/adapters/proctree";
 import { bfsExpandedNodes } from "@/helpers/flextree";
 import { cn } from "@/shadcn/lib/utils";
 import { Minus, Plus, SearchCode } from "lucide-react";
-
-const LEADER_BASE_WIDTH = 300;
-const LEADER_BASE_HEIGHT = 50;
-const SUB_NODE_HEIGHT = 30;
-const SUB_NODES_GAP = 10;
-const MIN_VERTICAL_SPACE_BETWEEN_NODES = 50;
-const HORIZONTAL_SPACE_BETWEEN_NODES = 50;
+import {
+  LEADER_BASE_WIDTH,
+  LEADER_BASE_HEIGHT,
+  SUB_NODE_HEIGHT,
+  SUB_NODES_GAP,
+  MIN_VERTICAL_SPACE_BETWEEN_NODES,
+  HORIZONTAL_SPACE_BETWEEN_NODES,
+  VERTICAL_SPACE_GROWTH_CAP,
+} from "@/config/proctree";
 
 function verticalSpacer(numChildren: number) {
-  return MIN_VERTICAL_SPACE_BETWEEN_NODES * Math.min(15, numChildren);
+  return (
+    MIN_VERTICAL_SPACE_BETWEEN_NODES *
+    Math.min(VERTICAL_SPACE_GROWTH_CAP, numChildren)
+  );
 }
 
 function leaderDims(numSubNodes: number): [number, number] {
@@ -51,7 +56,7 @@ function SubNode({ data }: NodeProps<Node<SubNodeData>>) {
       }}
       className={cn(
         "relative flex items-center px-3",
-        "hover:bg-accent hover:text-accent-foreground cursor-pointer",
+        "hover:bg-accent/50 hover:text-accent-foreground cursor-pointer",
       )}
     >
       <div className="truncate w-full text-sm">{data.name}</div>

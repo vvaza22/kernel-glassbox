@@ -1,0 +1,7 @@
+export const LEADER_BASE_WIDTH = 300;
+export const LEADER_BASE_HEIGHT = 50;
+export const SUB_NODE_HEIGHT = 30;
+export const SUB_NODES_GAP = 10;
+export const MIN_VERTICAL_SPACE_BETWEEN_NODES = 50;
+export const HORIZONTAL_SPACE_BETWEEN_NODES = 50;
+export const VERTICAL_SPACE_GROWTH_CAP = 15;
