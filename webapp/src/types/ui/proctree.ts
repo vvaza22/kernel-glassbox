@@ -20,3 +20,18 @@ export type Pos = {
   x: number;
   y: number;
 };
+
+export type LeaderNodeData = {
+  id: string;
+  name: string;
+  pid: number;
+  numSubNodes: number;
+  hasChildren: boolean;
+  expanded: boolean;
+  onExpandToggle: (id: string) => void;
+};
+
+export type SubNodeData = {
+  name: string;
+  pid: number;
+};

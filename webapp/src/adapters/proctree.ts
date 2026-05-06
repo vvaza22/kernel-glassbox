@@ -1,5 +1,11 @@
 import type { ProctreeNode, TaskKey } from "@/types/ws/proctree";
-import type { SubTreeNode, TreeNode, Pos } from "@/types/ui/proctree";
+import type {
+  SubTreeNode,
+  TreeNode,
+  Pos,
+  LeaderNodeData,
+  SubNodeData,
+} from "@/types/ui/proctree";
 import { type Node, type Edge, Position } from "@xyflow/react";
 
 const toId = (key: TaskKey) => `${key.pid}-${key.startTime}`;
@@ -113,7 +119,7 @@ export function toFlowNodes(
   flowNodes: Node[];
   flowEdges: Edge[];
 } {
-  const flowNodes = treeNodes.map((node) => ({
+  const flowNodes: Node<LeaderNodeData>[] = treeNodes.map((node) => ({
     id: node.id,
     type: "leader",
     data: {
@@ -133,7 +139,7 @@ export function toFlowNodes(
     },
   }));
 
-  const flowSubNodes: Node[] = treeNodes.flatMap((node) => {
+  const flowSubNodes: Node<SubNodeData>[] = treeNodes.flatMap((node) => {
     return node.subNodes.map((subNode, rankIndex) => ({
       id: subNode.id,
       type: "sub",

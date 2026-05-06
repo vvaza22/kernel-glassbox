@@ -10,7 +10,11 @@ import {
 } from "@xyflow/react";
 import { useMemo, useState, useEffect } from "react";
 import type { Node, Edge, NodeProps } from "@xyflow/react";
-import type { TreeNode } from "@/types/ui/proctree";
+import type {
+  LeaderNodeData,
+  SubNodeData,
+  TreeNode,
+} from "@/types/ui/proctree";
 import { kernelId } from "@/adapters/proctree";
 import { getLayout } from "@/helpers/flextree";
 import { toFlowNodes } from "@/adapters/proctree";
@@ -38,7 +42,7 @@ function leaderDims(numSubNodes: number): [number, number] {
   ];
 }
 
-function SubNode({ data }: NodeProps) {
+function SubNode({ data }: NodeProps<Node<SubNodeData>>) {
   return (
     <div
       style={{
@@ -50,14 +54,14 @@ function SubNode({ data }: NodeProps) {
         "hover:bg-accent hover:text-accent-foreground cursor-pointer",
       )}
     >
-      <div className="truncate w-full text-sm">{String(data.name)}</div>
+      <div className="truncate w-full text-sm">{data.name}</div>
       <span
         className={cn(
           "inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-mono leading-none",
           "border-border bg-muted text-muted-foreground whitespace-nowrap",
         )}
       >
-        PID {String(data.pid)}
+        PID {data.pid}
       </span>
       <Handle
         type="source"
@@ -68,14 +72,8 @@ function SubNode({ data }: NodeProps) {
   );
 }
 
-function LeaderNode({ data }: NodeProps) {
-  const hasChildren = data.hasChildren as boolean;
-  const expanded = data.expanded as boolean;
-  const onExpandToggle = data.onExpandToggle as (id: unknown) => void;
-  const numSubNodes = data.numSubNodes as number;
-
-  const [width, height] = leaderDims(data.numSubNodes as number);
-
+function LeaderNode({ data }: NodeProps<Node<LeaderNodeData>>) {
+  const [width, height] = leaderDims(data.numSubNodes);
   const isRoot = data.pid === 0;
 
   return (
@@ -102,7 +100,7 @@ function LeaderNode({ data }: NodeProps) {
         className={cn(
           "w-full h-[50px] flex items-center justify-between px-3",
           "bg-muted/30",
-          numSubNodes > 0
+          data.numSubNodes > 0
             ? "border-b border-border rounded-t-lg"
             : "rounded-lg",
         )}
@@ -117,10 +115,10 @@ function LeaderNode({ data }: NodeProps) {
               "bg-background text-muted-foreground whitespace-nowrap",
             )}
           >
-            PID {String(data.pid)}
+            PID {data.pid}
           </span>
           <div className="truncate font-mono text-sm font-semibold">
-            {String(data.name)}
+            {data.name}
           </div>
         </div>
 
@@ -138,7 +136,7 @@ function LeaderNode({ data }: NodeProps) {
         )}
       </div>
 
-      {hasChildren && (
+      {data.hasChildren && (
         <Handle
           type="source"
           position={Position.Bottom}
@@ -147,14 +145,12 @@ function LeaderNode({ data }: NodeProps) {
             "!bg-background !border-muted-foreground !border-1",
           )}
           onPointerDown={(e) => {
-            if (hasChildren) {
-              e.stopPropagation();
-              onExpandToggle(data.id);
-            }
+            e.stopPropagation();
+            data.onExpandToggle(data.id);
           }}
         >
           <span className="text-foreground text-sm pointer-events-none">
-            {expanded ? (
+            {data.expanded ? (
               <Minus className="w-3 h-3" />
             ) : (
               <Plus className="w-3 h-3" />
