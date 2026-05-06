@@ -8,12 +8,13 @@ import {
   MiniMap,
   Controls,
 } from "@xyflow/react";
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import type { Node, Edge, NodeProps } from "@xyflow/react";
 import type {
   LeaderNodeData,
   SubNodeData,
   TreeNode,
+  Pos,
 } from "@/types/ui/proctree";
 import { kernelId } from "@/adapters/proctree";
 import { getLayout } from "@/helpers/flextree";
@@ -29,6 +30,7 @@ import {
   MIN_VERTICAL_SPACE_BETWEEN_NODES,
   HORIZONTAL_SPACE_BETWEEN_NODES,
   VERTICAL_SPACE_GROWTH_CAP,
+  NODE_POS_EQUALITY_THRESHOLD,
 } from "@/config/proctree";
 
 function verticalSpacer(numChildren: number) {
@@ -172,6 +174,10 @@ type ViewerProps = {
 };
 
 export default function Viewer({ treeNodes }: ViewerProps) {
+  const nodeTypes = useMemo(() => ({ leader: LeaderNode, sub: SubNode }), []);
+  const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
+
   const [expanded, setExpanded] = useState(new Set<string>([kernelId]));
   const isExpanded = (id: string) => expanded.has(id);
   const toggleExpand = (id: string) => {
@@ -186,14 +192,54 @@ export default function Viewer({ treeNodes }: ViewerProps) {
     });
   };
 
-  const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
+  // Suggested layout from the algorithm on the last render
+  const prevSuggestedLayout = useRef<Map<String, Pos>>(new Map());
+  // New layout after user drags nodes around
+  const userDefinedLayout = useRef<Map<String, Pos>>(new Map());
 
-  const nodeTypes = useMemo(() => ({ leader: LeaderNode, sub: SubNode }), []);
+  const handleNodeDragStop = (_: React.MouseEvent, node: Node) => {
+    userDefinedLayout.current.set(node.id, {
+      x: node.position.x,
+      y: node.position.y,
+    });
+  };
+
+  const posEqual = (pos1: Pos | undefined, pos2: Pos | undefined) => {
+    if (!pos1 || !pos2) return false;
+    return (
+      Math.abs(pos1.x - pos2.x) < NODE_POS_EQUALITY_THRESHOLD &&
+      Math.abs(pos1.y - pos2.y) < NODE_POS_EQUALITY_THRESHOLD
+    );
+  };
+
+  const getFinalLayout = (suggestedLayout: Map<string, Pos>) => {
+    const finalLayout = new Map<string, Pos>();
+
+    suggestedLayout.forEach((cur, id) => {
+      const userPos = userDefinedLayout.current.get(id);
+      if (!userPos) {
+        // User has not moved this node, use the algorithm's suggestion
+        finalLayout.set(id, cur);
+        return;
+      }
+      const prev = prevSuggestedLayout.current.get(id);
+      if (posEqual(prev, cur)) {
+        // Algorithm suggests the same position as previously, use user's position
+        finalLayout.set(id, userPos);
+        return;
+      }
+      // Node was moved by the algorithm, need to reset user's position
+      finalLayout.set(id, cur);
+    });
+
+    prevSuggestedLayout.current = suggestedLayout;
+
+    return finalLayout;
+  };
 
   useEffect(() => {
     const expandedNodes = bfsExpandedNodes(treeNodes, isExpanded);
-    const posMap = getLayout(
+    const suggestedLayout = getLayout(
       expandedNodes,
       leaderDims,
       verticalSpacer,
@@ -201,7 +247,7 @@ export default function Viewer({ treeNodes }: ViewerProps) {
     );
     const { flowNodes, flowEdges } = toFlowNodes(
       expandedNodes,
-      posMap,
+      getFinalLayout(suggestedLayout),
       toggleExpand,
       isExpanded,
     );
@@ -215,6 +261,7 @@ export default function Viewer({ treeNodes }: ViewerProps) {
       edges={edges}
       onNodesChange={onNodesChange}
       onEdgesChange={onEdgesChange}
+      onNodeDragStop={handleNodeDragStop}
       nodeTypes={nodeTypes}
       fitView
       minZoom={0.1}
