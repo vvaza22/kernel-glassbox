@@ -15,3 +15,8 @@ export type TreeNode = {
   subNodes: SubTreeNode[];
   childTreeNodeIds: string[];
 };
+
+export type Pos = {
+  x: number;
+  y: number;
+};

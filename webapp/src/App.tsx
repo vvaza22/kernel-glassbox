@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useWSStore } from "@/stores/ws";
 import { debug } from "@/helpers/logger";
-import ProctreeViewer from "@/features/ProctreeViewer.tsx";
+import Proctree from "@/features/Proctree.tsx";
 
 /* Localisation */
 import "@/localisation/i18n";
@@ -24,7 +24,7 @@ export default function App() {
 
   return (
     <div className="h-screen w-screen relative">
-      <ProctreeViewer />
+      <Proctree />
     </div>
   );
 }

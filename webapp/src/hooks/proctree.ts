@@ -21,14 +21,14 @@ export default function useProctree() {
       return;
     }
 
+    const newNodes = toTreeNodes(data);
+    debug("Transformed proctree dump data:", newNodes);
+    setNodes(newNodes);
+
     // The initial data was received
     setTimeout(() => {
       setLoaded(true);
     }, 1000);
-
-    const newNodes = toTreeNodes(data);
-    debug("Transformed proctree dump data:", newNodes);
-    setNodes(newNodes);
   };
 
   useEffect(() => {
