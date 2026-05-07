@@ -35,7 +35,6 @@ export default function useProctree() {
     if (status !== WSStatus.Connected) return;
     const unsubscribe = subscribe(WSMsgType.WSMsgSrvProctreeDump, handler);
 
-    // Request the initial proctree dump on connect
     send({
       type: WSMsgType.WSMsgClientReqProctreeDump,
       payload: null,

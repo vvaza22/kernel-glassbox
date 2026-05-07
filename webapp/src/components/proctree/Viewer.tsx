@@ -17,7 +17,7 @@ import type {
   Pos,
 } from "@/types/ui/proctree";
 import { kernelId } from "@/adapters/proctree";
-import { getLayout } from "@/helpers/flextree";
+import { getLayout, withinThreshold } from "@/helpers/flextree";
 import { toFlowNodes } from "@/adapters/proctree";
 import { bfsExpandedNodes } from "@/helpers/flextree";
 import { cn } from "@/shadcn/lib/utils";
@@ -178,6 +178,7 @@ export default function Viewer({ treeNodes }: ViewerProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
 
+  // TODO: Implement expanded state cleaning after rerender
   const [expanded, setExpanded] = useState(new Set<string>([kernelId]));
   const isExpanded = (id: string) => expanded.has(id);
   const toggleExpand = (id: string) => {
@@ -204,14 +205,6 @@ export default function Viewer({ treeNodes }: ViewerProps) {
     });
   };
 
-  const posEqual = (pos1: Pos | undefined, pos2: Pos | undefined) => {
-    if (!pos1 || !pos2) return false;
-    return (
-      Math.abs(pos1.x - pos2.x) < NODE_POS_EQUALITY_THRESHOLD &&
-      Math.abs(pos1.y - pos2.y) < NODE_POS_EQUALITY_THRESHOLD
-    );
-  };
-
   const getFinalLayout = (suggestedLayout: Map<string, Pos>) => {
     const finalLayout = new Map<string, Pos>();
 
@@ -223,13 +216,14 @@ export default function Viewer({ treeNodes }: ViewerProps) {
         return;
       }
       const prev = prevSuggestedLayout.current.get(id);
-      if (posEqual(prev, cur)) {
+      if (withinThreshold(prev, cur, NODE_POS_EQUALITY_THRESHOLD)) {
         // Algorithm suggests the same position as previously, use user's position
         finalLayout.set(id, userPos);
         return;
       }
       // Node was moved by the algorithm, need to reset user's position
       finalLayout.set(id, cur);
+      userDefinedLayout.current.delete(id);
     });
 
     prevSuggestedLayout.current = suggestedLayout;

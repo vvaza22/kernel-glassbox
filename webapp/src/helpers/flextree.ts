@@ -94,3 +94,14 @@ export function getLayout(
   layout(tree);
   return toPosMap(tree);
 }
+
+export function withinThreshold(
+  pos1: Pos | undefined,
+  pos2: Pos | undefined,
+  threshold: number,
+) {
+  if (!pos1 || !pos2) return false;
+  return (
+    Math.max(Math.abs(pos1.x - pos2.x), Math.abs(pos1.y - pos2.y)) < threshold
+  );
+}
