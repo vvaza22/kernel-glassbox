@@ -1,5 +1,6 @@
 #include "gb_netlink.h"
 #include "gb_nl_proctree.h"
+#include "gb_nl_taskview.h"
 #include <linux/netlink.h>
 #include <net/genetlink.h>
 
@@ -10,6 +11,12 @@ static const struct genl_ops gb_genl_ops[] = {
 		.dumpit = gb_proctree_dump,
 		.done = gb_proctree_dump_done,
 	},
+	{
+		.cmd = GB_CMD_TASKVIEW_REQ,
+		.doit = gb_taskview_req,
+		.policy = gb_nl_taskview_req_policy,
+		.maxattr = GB_ATTR_MAX,
+	}
 };
 
 struct genl_family gb_genl_family = {

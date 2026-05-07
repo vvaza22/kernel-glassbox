@@ -5,7 +5,7 @@ ifneq ($(KERNELRELEASE),)
 # -> KBUILD Context
 
 obj-m := glassbox.o
-glassbox-y := src/main.o src/netlink.o src/proctree.o src/nl_proctree.o src/taskview.o src/helper.o
+glassbox-y := src/main.o src/netlink.o src/proctree.o src/nl_proctree.o src/taskview.o src/helper.o src/nl_taskview.o
 ccflags-y := -I$(src)/../include
 
 else

@@ -10,6 +10,11 @@ enum {
 	/* Proctree */
 	GB_ATTR_PROCTREE_NODE,
 
+	/* Taskview */
+	GB_ATTR_TASKVIEW_PID,
+	GB_ATTR_TASKVIEW_START_TIME,
+	GB_ATTR_TASKVIEW_DATA,
+
 	__GB_ATTR_MAX,
 };
 #define GB_ATTR_MAX (__GB_ATTR_MAX - 1)
@@ -20,6 +25,9 @@ enum {
 
 	/* Proctree */
 	GB_CMD_PROCTREE_DUMP,
+
+	/* Taskview */
+	GB_CMD_TASKVIEW_REQ,
 
 	__GB_CMD_MAX,
 };
