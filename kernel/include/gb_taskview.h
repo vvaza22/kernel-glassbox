@@ -6,14 +6,16 @@
 #include <linux/types.h>
 
 struct gb_taskview {
-	// identity
+	/* identity */
 	pid_t pid;
 	pid_t tgid;
 	u64 start_time;
 	char name[TASK_COMM_LEN];
-	// state
+	/* state */
 	unsigned int state;
-};
+	/* existence */
+	bool found;
+} __attribute__((aligned(8)));
 
 struct gb_taskview *gb_taskview_get(struct gb_task_key key);
 void gb_taskview_free(struct gb_taskview *taskview);

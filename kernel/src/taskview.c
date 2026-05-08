@@ -23,17 +23,18 @@ struct gb_taskview *gb_taskview_get(struct gb_task_key key)
 	struct task_struct *task;
 	struct gb_taskview *result;
 
-	task = gb_find_get_task(key);
-	if (!task) {
-		return ERR_PTR(-ESRCH);
-	}
-
 	result = kmalloc(sizeof(*result), GFP_KERNEL);
 	if (!result) {
-		put_task_struct(task);
 		return ERR_PTR(-ENOMEM);
 	}
 
+	task = gb_find_get_task(key);
+	if (!task) {
+		result->found = false;
+		return result;
+	}
+
+	result->found = true;
 	gb_taskview_fill(result, task);
 
 	// decrement refcount
