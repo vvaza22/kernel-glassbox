@@ -48,7 +48,7 @@ int gb_taskview_req(struct sk_buff *skb, struct genl_info *info)
 	}
 
 	resp_head = genlmsg_put_reply(resp_skb, info, &gb_genl_family, 0,
-				      GB_CMD_TASKVIEW_REQ);
+				      GB_CMD_TASKVIEW_GET);
 	if (!resp_head) {
 		pr_err("gb_taskview_req: Failed to put response head\n");
 		nlmsg_free(resp_skb);

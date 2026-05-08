@@ -12,7 +12,7 @@ static const struct genl_ops gb_genl_ops[] = {
 		.done = gb_proctree_dump_done,
 	},
 	{
-		.cmd = GB_CMD_TASKVIEW_REQ,
+		.cmd = GB_CMD_TASKVIEW_GET,
 		.doit = gb_taskview_req,
 		.policy = gb_nl_taskview_req_policy,
 		.maxattr = GB_ATTR_MAX,

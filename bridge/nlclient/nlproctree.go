@@ -59,14 +59,18 @@ func (p *proctreeClient) decodeDumpMessage(msg genetlink.Message) ([]model.Proct
 	}
 
 	for attrDecoder.Next() {
-		parser := utils.NewByteParser(attrDecoder.Bytes())
 		if attrDecoder.Type() == model.AttrProctreeNode {
+			parser := utils.NewByteParser(attrDecoder.Bytes())
 			node, err := model.ReadProctreeNode(parser)
 			if err != nil {
 				return nil, err
 			}
 			nodes = append(nodes, node)
 		}
+	}
+
+	if err := attrDecoder.Err(); err != nil {
+		return nil, err
 	}
 
 	return nodes, nil

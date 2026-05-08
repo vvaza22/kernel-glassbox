@@ -27,7 +27,7 @@ enum {
 	GB_CMD_PROCTREE_DUMP,
 
 	/* Taskview */
-	GB_CMD_TASKVIEW_REQ,
+	GB_CMD_TASKVIEW_GET,
 
 	__GB_CMD_MAX,
 };
