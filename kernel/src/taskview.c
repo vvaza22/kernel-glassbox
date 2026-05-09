@@ -12,7 +12,7 @@ static void gb_taskview_fill(struct gb_taskview *taskview,
 	taskview->pid = task->pid;
 	taskview->tgid = task->tgid;
 	taskview->start_time = task->start_time;
-	strscpy(taskview->name, task->comm, sizeof(taskview->name));
+	get_task_comm(taskview->name, task);
 
 	// state
 	taskview->state = READ_ONCE(task->__state);
