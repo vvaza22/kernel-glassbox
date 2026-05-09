@@ -14,7 +14,7 @@ var ErrTooManyMessages = errors.New("too many messages received in response")
 var ErrNoDataAttrReceived = errors.New("no data attribute received in response")
 
 type TaskviewClient interface {
-	View(key model.TaskKey) (*model.TaskviewData, error)
+	Get(key model.TaskKey) (*model.TaskviewData, error)
 }
 
 type taskviewClient struct {
@@ -29,7 +29,7 @@ func NewTaskviewClient(ctx *model.NetlinkCtx) TaskviewClient {
 	}
 }
 
-func (t *taskviewClient) View(key model.TaskKey) (*model.TaskviewData, error) {
+func (t *taskviewClient) Get(key model.TaskKey) (*model.TaskviewData, error) {
 	encoder := netlink.NewAttributeEncoder()
 	encoder.Uint32(model.AttrTaskviewPid, key.Pid)
 	encoder.Uint64(model.AttrTaskviewStartTime, key.StartTime)
@@ -46,7 +46,7 @@ func (t *taskviewClient) View(key model.TaskKey) (*model.TaskviewData, error) {
 		Data: payload,
 	}
 
-	msgs, err := t.conn.Execute(req, t.family.ID, netlink.Request|netlink.Acknowledge)
+	msgs, err := t.conn.Execute(req, t.family.ID, netlink.Request)
 	if err != nil {
 		return nil, err
 	}

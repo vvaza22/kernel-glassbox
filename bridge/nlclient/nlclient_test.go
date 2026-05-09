@@ -8,7 +8,7 @@ import (
 )
 
 func TestNetlinkClient(t *testing.T) {
-	t.Run("single connection", func(t *testing.T) {
+	t.Run("creates single connection", func(t *testing.T) {
 		nl, err := nlclient.NewNetlinkClient()
 		require.NoError(t, err)
 		require.NotNil(t, nl)
@@ -17,7 +17,7 @@ func TestNetlinkClient(t *testing.T) {
 		require.NoError(t, err)
 	})
 
-	t.Run("multiple connections", func(t *testing.T) {
+	t.Run("creates multiple connections", func(t *testing.T) {
 		nl1, err := nlclient.NewNetlinkClient()
 		require.NoError(t, err)
 		require.NotNil(t, nl1)
@@ -33,7 +33,7 @@ func TestNetlinkClient(t *testing.T) {
 		require.NoError(t, err)
 	})
 
-	t.Run("rapid connect and destroy", func(t *testing.T) {
+	t.Run("rapidly connects and disconnects multiple times", func(t *testing.T) {
 		for range 100 {
 			nl, err := nlclient.NewNetlinkClient()
 			require.NoError(t, err)
