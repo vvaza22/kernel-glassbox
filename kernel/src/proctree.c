@@ -20,7 +20,7 @@ static void gb_proctree_read_task(struct gb_proctree_node *node,
 	parent = rcu_dereference(task->parent);
 	real_parent = rcu_dereference(task->real_parent);
 
-	// parent
+	/* parent */
 	node->parent.pid = 0;
 	node->parent.start_time = 0;
 	if (parent) {
@@ -28,7 +28,7 @@ static void gb_proctree_read_task(struct gb_proctree_node *node,
 		node->parent.start_time = parent->start_time;
 	}
 
-	// real parent
+	/* real parent */
 	node->real_parent.pid = 0;
 	node->real_parent.start_time = 0;
 	if (real_parent) {
@@ -36,15 +36,15 @@ static void gb_proctree_read_task(struct gb_proctree_node *node,
 		node->real_parent.start_time = real_parent->start_time;
 	}
 
-	// group leader
+	/* group leader */
 	node->group_leader.pid = group_leader->pid;
 	node->group_leader.start_time = group_leader->start_time;
 
-	// self
+	/* self */
 	node->self.pid = task->pid;
 	node->self.start_time = task->start_time;
 
-	// task name
+	/* task name */
 	get_task_comm(node->name, task);
 }
 

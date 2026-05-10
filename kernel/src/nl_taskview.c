@@ -3,6 +3,7 @@
 #include "gb_taskview.h"
 #include <linux/bug.h>
 #include <linux/netlink.h>
+#include <linux/sched/cputime.h>
 #include <net/genetlink.h>
 
 const struct nla_policy gb_nl_taskview_req_policy[GB_ATTR_MAX + 1] = {
@@ -37,6 +38,7 @@ int gb_taskview_req(struct sk_buff *skb, struct genl_info *info)
 	if (IS_ERR(data)) {
 		pr_err("gb_taskview_req: Failed to get taskview data PID %d, start_time %llu: %ld\n",
 		       req.pid, req.start_time, PTR_ERR(data));
+		// Common error will be -ESRCH
 		return PTR_ERR(data);
 	}
 

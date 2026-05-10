@@ -4,14 +4,18 @@ import (
 	"bridge/model"
 	"bridge/utils"
 	"errors"
+	"syscall"
 
 	"github.com/mdlayher/genetlink"
 	"github.com/mdlayher/netlink"
 )
 
-var ErrNoMessagesReceived = errors.New("no messages received in response")
-var ErrTooManyMessages = errors.New("too many messages received in response")
-var ErrNoDataAttrReceived = errors.New("no data attribute received in response")
+var (
+	ErrNoTaskFound        = errors.New("task not found")
+	ErrNoMessagesReceived = errors.New("no messages received in response")
+	ErrTooManyMessages    = errors.New("too many messages received in response")
+	ErrNoDataAttrReceived = errors.New("no data attribute received in response")
+)
 
 type TaskviewClient interface {
 	Get(key model.TaskKey) (*model.TaskviewData, error)
@@ -48,6 +52,9 @@ func (t *taskviewClient) Get(key model.TaskKey) (*model.TaskviewData, error) {
 
 	msgs, err := t.conn.Execute(req, t.family.ID, netlink.Request)
 	if err != nil {
+		if errors.Is(err, syscall.ESRCH) {
+			return nil, ErrNoTaskFound
+		}
 		return nil, err
 	}
 

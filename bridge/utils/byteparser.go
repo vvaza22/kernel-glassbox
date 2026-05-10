@@ -11,6 +11,7 @@ var ErrOutOfBounds = errors.New("can not read beyond the end of data")
 type ByteParser interface {
 	Padding(length uint)
 	ReadBool() bool
+	ReadInt32() int32
 	ReadUint32() uint32
 	ReadUint64() uint64
 	ReadString(length uint) string
@@ -46,6 +47,14 @@ func (bp *byteParser) ReadBool() bool {
 		return false
 	}
 	return slice[0] != 0
+}
+
+func (bp *byteParser) ReadInt32() int32 {
+	slice := bp.read(4)
+	if slice == nil {
+		return 0
+	}
+	return int32(binary.LittleEndian.Uint32(slice))
 }
 
 func (bp *byteParser) ReadUint32() uint32 {
