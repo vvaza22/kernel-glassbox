@@ -81,6 +81,10 @@ func TestTaskviewClient(t *testing.T) {
 
 		for _, node := range nodes {
 			data, err := taskview.Get(node.Self)
+			if err != nil && errors.Is(err, nlclient.ErrNoTaskFound) {
+				// Task not found errors are OK, threads are rapidly created and destroyed
+				continue
+			}
 			require.NoError(t, err)
 			require.NoError(t, verifyTaskviewData(data, node))
 		}
@@ -99,6 +103,10 @@ func TestTaskviewClient(t *testing.T) {
 				for range numGetRequests {
 					data, err := taskview.Get(cur.Self)
 					if err != nil {
+						if errors.Is(err, nlclient.ErrNoTaskFound) {
+							// Same logic as above
+							continue
+						}
 						return err
 					}
 					if err := verifyTaskviewData(data, cur); err != nil {
