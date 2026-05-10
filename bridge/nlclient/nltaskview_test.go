@@ -104,7 +104,7 @@ func TestTaskviewClient(t *testing.T) {
 					data, err := taskview.Get(cur.Self)
 					if err != nil {
 						if errors.Is(err, nlclient.ErrNoTaskFound) {
-							// Same logic as above
+							// Same logic as in the previous test
 							continue
 						}
 						return err

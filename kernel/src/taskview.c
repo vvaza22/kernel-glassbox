@@ -124,7 +124,6 @@ static void gb_taskview_fill(struct gb_taskview *taskview,
 				 task);
 
 	/* security */
-	taskview->stack_canary = 0;
 #ifdef CONFIG_STACKPROTECTOR
 	/* TODO: security risk, when any program can access the taskview feature */
 	taskview->stack_canary = READ_ONCE(task->stack_canary);
