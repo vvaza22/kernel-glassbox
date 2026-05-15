@@ -3,8 +3,9 @@ package nlclient_test
 import (
 	"bridge/model"
 	"bridge/nlclient"
-	"errors"
 	"testing"
+
+	"github.com/pkg/errors"
 
 	"github.com/stretchr/testify/require"
 	"golang.org/x/sync/errgroup"
@@ -79,14 +80,14 @@ func TestTaskviewClient(t *testing.T) {
 		require.NotNil(t, nodes)
 		require.NotEmpty(t, nodes)
 
-		for _, node := range nodes {
-			data, err := taskview.Get(node.Self)
+		for _, expectedNode := range nodes {
+			actualData, err := taskview.Get(expectedNode.Self)
 			if err != nil && errors.Is(err, nlclient.ErrNoTaskFound) {
 				// Task not found errors are OK, threads are rapidly created and destroyed
 				continue
 			}
 			require.NoError(t, err)
-			require.NoError(t, verifyTaskviewData(data, node))
+			require.NoError(t, verifyTaskviewData(expectedNode, actualData))
 		}
 	})
 
@@ -97,11 +98,12 @@ func TestTaskviewClient(t *testing.T) {
 		require.NotEmpty(t, nodes)
 
 		var eg errgroup.Group
-		for _, node := range nodes {
-			cur := node
+		for _, expectedNode := range nodes {
+			// It is ok to use loop variables in goroutines
+			// https://go.dev/blog/loopvar-preview
 			eg.Go(func() error {
 				for range numGetRequests {
-					data, err := taskview.Get(cur.Self)
+					actualData, err := taskview.Get(expectedNode.Self)
 					if err != nil {
 						if errors.Is(err, nlclient.ErrNoTaskFound) {
 							// Same logic as in the previous test
@@ -109,7 +111,7 @@ func TestTaskviewClient(t *testing.T) {
 						}
 						return err
 					}
-					if err := verifyTaskviewData(data, cur); err != nil {
+					if err := verifyTaskviewData(expectedNode, actualData); err != nil {
 						return err
 					}
 				}
@@ -122,21 +124,28 @@ func TestTaskviewClient(t *testing.T) {
 	})
 }
 
-func verifyTaskviewData(data *model.TaskviewData, node model.ProctreeNode) error {
-	if data == nil {
-		return errors.New("data is nil")
+func verifyTaskviewData(expected model.ProctreeNode, actual *model.TaskviewData) error {
+	if actual == nil {
+		return errors.New("actual data is nil")
 	}
-	if data.Pid != node.Self.Pid {
-		return errors.New("invalid pid")
+	if err := verifyShallowEqual(expected.Self.Pid, actual.Pid, "invalid pid"); err != nil {
+		return err
 	}
-	if data.StartTime != node.Self.StartTime {
-		return errors.New("invalid start time")
+	if err := verifyShallowEqual(expected.Self.StartTime, actual.StartTime, "invalid start time"); err != nil {
+		return err
 	}
-	if data.Tgid != node.GroupLeader.Pid {
-		return errors.New("invalid tgid")
+	if err := verifyShallowEqual(expected.GroupLeader.Pid, actual.Tgid, "invalid tgid"); err != nil {
+		return err
 	}
-	if data.Comm != node.Name {
-		return errors.New("invalid comm")
+	if err := verifyShallowEqual(expected.Name, actual.Comm, "invalid comm"); err != nil {
+		return err
+	}
+	return nil
+}
+
+func verifyShallowEqual(expected, actual any, errorMsg string) error {
+	if expected != actual {
+		return errors.Wrapf(errors.New(errorMsg), "expected: %v, actual: %v", expected, actual)
 	}
 	return nil
 }
