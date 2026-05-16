@@ -6,12 +6,24 @@ const FamilyName = "GLASSBOX"
 
 const (
 	CmdUnspec = iota
+
+	// Proctree
 	CmdProctreeDump
+
+	// Taskview
+	CmdTaskviewGet
 )
 
 const (
 	AttrUnspec = iota
+
+	// Proctree
 	AttrProctreeNode
+
+	// Taskview
+	AttrTaskviewPid
+	AttrTaskviewStartTime
+	AttrTaskviewData
 )
 
 type NetlinkCtx struct {

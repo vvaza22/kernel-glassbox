@@ -9,6 +9,7 @@ import (
 
 type NetlinkClient interface {
 	Proctree() ProctreeClient
+	Taskview() TaskviewClient
 	Destroy() error
 }
 
@@ -16,6 +17,7 @@ type netlinkClient struct {
 	conn           *genetlink.Conn
 	family         genetlink.Family
 	proctreeClient ProctreeClient
+	taskviewClient TaskviewClient
 }
 
 func NewNetlinkClient() (NetlinkClient, error) {
@@ -40,11 +42,20 @@ func NewNetlinkClient() (NetlinkClient, error) {
 		Family: family,
 	})
 
+	nlClient.taskviewClient = NewTaskviewClient(&model.NetlinkCtx{
+		Conn:   conn,
+		Family: family,
+	})
+
 	return nlClient, nil
 }
 
 func (c *netlinkClient) Proctree() ProctreeClient {
 	return c.proctreeClient
+}
+
+func (c *netlinkClient) Taskview() TaskviewClient {
+	return c.taskviewClient
 }
 
 func (c *netlinkClient) Destroy() error {

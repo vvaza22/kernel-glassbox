@@ -1,0 +1,151 @@
+package nlclient_test
+
+import (
+	"bridge/model"
+	"bridge/nlclient"
+	"testing"
+
+	"github.com/pkg/errors"
+
+	"github.com/stretchr/testify/require"
+	"golang.org/x/sync/errgroup"
+)
+
+const (
+	numGetRequests = 100
+)
+
+func TestTaskviewClient(t *testing.T) {
+	nl, err := nlclient.NewNetlinkClient()
+	require.NoError(t, err)
+	require.NotNil(t, nl)
+	defer nl.Destroy()
+
+	proctree := nl.Proctree()
+	taskview := nl.Taskview()
+
+	t.Run("returns found false for non-existent key", func(t *testing.T) {
+		// Wrong PID and StartTime
+		taskviewData, err := taskview.Get(model.TaskKey{Pid: 1234567, StartTime: 0})
+		require.Error(t, err)
+		require.ErrorIs(t, err, nlclient.ErrNoTaskFound)
+		require.Nil(t, taskviewData)
+
+		// Correct PID but wrong StartTime
+		taskviewData, err = taskview.Get(model.TaskKey{Pid: 1, StartTime: 1})
+		require.Error(t, err)
+		require.ErrorIs(t, err, nlclient.ErrNoTaskFound)
+		require.Nil(t, taskviewData)
+	})
+
+	t.Run("gets taskview data", func(t *testing.T) {
+		nodes, err := proctree.Dump()
+		require.NoError(t, err)
+		require.NotNil(t, nodes)
+		require.NotEmpty(t, nodes)
+
+		nodeMap := make(map[uint32]model.ProctreeNode)
+		for _, node := range nodes {
+			nodeMap[node.Self.Pid] = node
+		}
+
+		// Get taskview for systemd
+		systemdNode, ok := nodeMap[1]
+		require.True(t, ok)
+
+		taskviewData, err := taskview.Get(systemdNode.Self)
+		require.NoError(t, err)
+		require.NotNil(t, taskviewData)
+		require.Equal(t, uint32(1), taskviewData.Pid)
+		require.Equal(t, uint32(1), taskviewData.Tgid)
+		require.Equal(t, systemdNode.Self.StartTime, taskviewData.StartTime)
+		require.Equal(t, "systemd", taskviewData.Comm)
+
+		// Get taskview for kthreadd
+		kthreadNode, ok := nodeMap[2]
+		require.True(t, ok)
+
+		taskviewData, err = taskview.Get(kthreadNode.Self)
+		require.NoError(t, err)
+		require.NotNil(t, taskviewData)
+		require.Equal(t, uint32(2), taskviewData.Pid)
+		require.Equal(t, uint32(2), taskviewData.Tgid)
+		require.Equal(t, kthreadNode.Self.StartTime, taskviewData.StartTime)
+		require.Equal(t, "kthreadd", taskviewData.Comm)
+	})
+
+	t.Run("rapidly gets taskview data for multiple processes", func(t *testing.T) {
+		nodes, err := proctree.Dump()
+		require.NoError(t, err)
+		require.NotNil(t, nodes)
+		require.NotEmpty(t, nodes)
+
+		for _, expectedNode := range nodes {
+			actualData, err := taskview.Get(expectedNode.Self)
+			if err != nil && errors.Is(err, nlclient.ErrNoTaskFound) {
+				// Task not found errors are OK, threads are rapidly created and destroyed
+				continue
+			}
+			require.NoError(t, err)
+			require.NoError(t, verifyTaskviewData(expectedNode, actualData))
+		}
+	})
+
+	t.Run("concurrently gets taskview data for multiple processes", func(t *testing.T) {
+		nodes, err := proctree.Dump()
+		require.NoError(t, err)
+		require.NotNil(t, nodes)
+		require.NotEmpty(t, nodes)
+
+		var eg errgroup.Group
+		for _, expectedNode := range nodes {
+			// It is ok to use loop variables in goroutines
+			// https://go.dev/blog/loopvar-preview
+			eg.Go(func() error {
+				for range numGetRequests {
+					actualData, err := taskview.Get(expectedNode.Self)
+					if err != nil {
+						if errors.Is(err, nlclient.ErrNoTaskFound) {
+							// Same logic as in the previous test
+							continue
+						}
+						return err
+					}
+					if err := verifyTaskviewData(expectedNode, actualData); err != nil {
+						return err
+					}
+				}
+				return nil
+			})
+		}
+
+		err = eg.Wait()
+		require.NoError(t, err)
+	})
+}
+
+func verifyTaskviewData(expected model.ProctreeNode, actual *model.TaskviewData) error {
+	if actual == nil {
+		return errors.New("actual data is nil")
+	}
+	if err := verifyShallowEqual(expected.Self.Pid, actual.Pid, "invalid pid"); err != nil {
+		return err
+	}
+	if err := verifyShallowEqual(expected.Self.StartTime, actual.StartTime, "invalid start time"); err != nil {
+		return err
+	}
+	if err := verifyShallowEqual(expected.GroupLeader.Pid, actual.Tgid, "invalid tgid"); err != nil {
+		return err
+	}
+	if err := verifyShallowEqual(expected.Name, actual.Comm, "invalid comm"); err != nil {
+		return err
+	}
+	return nil
+}
+
+func verifyShallowEqual(expected, actual any, errorMsg string) error {
+	if expected != actual {
+		return errors.Wrapf(errors.New(errorMsg), "expected: %v, actual: %v", expected, actual)
+	}
+	return nil
+}
