@@ -13,8 +13,8 @@ static const struct genl_ops gb_genl_ops[] = {
 	},
 	{
 		.cmd = GB_CMD_TASKVIEW_GET,
-		.doit = gb_taskview_req,
-		.policy = gb_nl_taskview_req_policy,
+		.doit = gb_nl_taskview_get,
+		.policy = gb_nl_taskview_get_pol,
 		.maxattr = GB_ATTR_MAX,
 	}
 };
@@ -34,7 +34,8 @@ int gb_netlink_init(void)
 
 	res = genl_register_family(&gb_genl_family);
 	if (res != 0) {
-		pr_err("Failed to register Generic Netlink family: %d\n", res);
+		pr_err("%s: Failed to register genl family: %d\n", __func__,
+		       res);
 		return res;
 	}
 	return 0;
