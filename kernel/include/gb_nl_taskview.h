@@ -5,7 +5,7 @@
 #include <linux/netlink.h>
 #include <net/genetlink.h>
 
-extern const struct nla_policy gb_nl_taskview_get_pol[GB_ATTR_MAX + 1];
+extern const struct nla_policy gb_nl_taskview_get_pol[GB_NL_ATTR_MAX + 1];
 
 int gb_nl_taskview_get(struct sk_buff *skb, struct genl_info *info);
 

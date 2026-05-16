@@ -6,9 +6,9 @@
 #include <linux/sched/cputime.h>
 #include <net/genetlink.h>
 
-const struct nla_policy gb_nl_taskview_get_pol[GB_ATTR_MAX + 1] = {
-	[GB_ATTR_TASKVIEW_PID] = { .type = NLA_U32 },
-	[GB_ATTR_TASKVIEW_START_TIME] = { .type = NLA_U64 },
+const struct nla_policy gb_nl_taskview_get_pol[GB_NL_ATTR_MAX + 1] = {
+	[GB_NL_ATTR_TASKVIEW_PID] = { .type = NLA_U32 },
+	[GB_NL_ATTR_TASKVIEW_START_TIME] = { .type = NLA_U64 },
 };
 
 static int gb_nl_taskview_reply(struct gb_taskview *data,
@@ -28,14 +28,14 @@ static int gb_nl_taskview_reply(struct gb_taskview *data,
 	}
 
 	hdr = genlmsg_put_reply(skb, info, &gb_genl_family, 0,
-				GB_CMD_TASKVIEW_GET);
+				GB_NL_CMD_TASKVIEW_GET);
 	if (!hdr) {
 		pr_err("%s: Failed to add genl header\n", __func__);
 		nlmsg_free(skb);
 		return -EMSGSIZE;
 	}
 
-	ret = nla_put(skb, GB_ATTR_TASKVIEW_DATA, sizeof(*data), data);
+	ret = nla_put(skb, GB_NL_ATTR_TASKVIEW_DATA, sizeof(*data), data);
 	if (ret) {
 		pr_err("%s: Failed to add data\n", __func__);
 		genlmsg_cancel(skb, hdr);
@@ -56,14 +56,15 @@ int gb_nl_taskview_get(struct sk_buff *skb, struct genl_info *info)
 	struct gb_taskview *data;
 	int res;
 
-	if (!info->attrs[GB_ATTR_TASKVIEW_PID] ||
-	    !info->attrs[GB_ATTR_TASKVIEW_START_TIME]) {
+	if (!info->attrs[GB_NL_ATTR_TASKVIEW_PID] ||
+	    !info->attrs[GB_NL_ATTR_TASKVIEW_START_TIME]) {
 		pr_err("%s: Invalid attributes\n", __func__);
 		return -EINVAL;
 	}
 
-	req.pid = nla_get_u32(info->attrs[GB_ATTR_TASKVIEW_PID]);
-	req.start_time = nla_get_u64(info->attrs[GB_ATTR_TASKVIEW_START_TIME]);
+	req.pid = nla_get_u32(info->attrs[GB_NL_ATTR_TASKVIEW_PID]);
+	req.start_time =
+		nla_get_u64(info->attrs[GB_NL_ATTR_TASKVIEW_START_TIME]);
 	pr_info("%s: (%d, %llu)\n", __func__, req.pid, req.start_time);
 
 	data = gb_taskview_get(req);
