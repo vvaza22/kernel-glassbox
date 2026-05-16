@@ -4,6 +4,12 @@
 #include <linux/netlink.h>
 #include <net/genetlink.h>
 
+/*
+	Sources I used to learn about netlink:
+	https://www.kernel.org/doc/html/next/userspace-api/netlink/intro.html
+	https://www.yaroslavps.com/weblog/genl-intro/
+*/
+
 static const struct genl_ops gb_genl_ops[] = {
 	{
 		.cmd = GB_NL_CMD_PROCTREE_DUMP,
