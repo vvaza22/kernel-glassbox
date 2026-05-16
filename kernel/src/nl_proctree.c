@@ -21,7 +21,7 @@ int gb_nl_proctree_dump_start(struct netlink_callback *cb)
 		return PTR_ERR(tree);
 	}
 
-	pr_info("Proctree dump: %zu nodes%s\n", tree->num_nodes,
+	pr_info("%s: %zu nodes%s\n", __func__, tree->num_nodes,
 		tree->truncated ? " (truncated)" : "");
 
 	ctx->tree = tree;
