@@ -2,6 +2,7 @@
 #include "gb_vmexplorer.h"
 #include <linux/module.h>
 
+MODULE_IMPORT_NS(EXPORTED_FOR_KUNIT_TESTING);
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Vasiko Vazagaevi");
 MODULE_DESCRIPTION("Glassbox Kernel Module");
