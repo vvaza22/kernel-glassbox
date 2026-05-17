@@ -1,1 +1,6 @@
 build/
+.vscode/
+.clang-format
+.clang-tidy
+.clangd
+compile_commands.json
