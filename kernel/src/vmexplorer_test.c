@@ -1,9 +1,8 @@
-#include "asm/paravirt.h"
-#include "asm/pgtable_64_types.h"
-#include "asm/pgtable_types.h"
 #include "gb_vmexplorer.h"
-#include "linux/gfp.h"
-#include "linux/mm_types.h"
+#include <asm/pgtable.h>
+#include <asm/pgtable_64_types.h>
+#include <asm/pgtable_types.h>
+#include <linux/mm_types.h>
 #include <kunit/test.h>
 #include <linux/sched/mm.h>
 
@@ -15,6 +14,9 @@ struct gb_test_vme_fill_ctx {
 	pmd_t *pmd00_base;
 	pte_t *pte000_base;
 	void *page0001;
+	void *hugepage002;
+	/* Note: I don't actually allocate 1GB page, but simple 4KB one */
+	void *gigapage10;
 };
 
 static void gb_test_vme_fill_ctx_free(struct gb_test_vme_fill_ctx *ctx)
@@ -27,6 +29,8 @@ static void gb_test_vme_fill_ctx_free(struct gb_test_vme_fill_ctx *ctx)
 	free_page((unsigned long)ctx->pmd00_base);
 	free_page((unsigned long)ctx->pte000_base);
 	free_page((unsigned long)ctx->page0001);
+	free_pages((unsigned long)ctx->hugepage002, 9);
+	free_page((unsigned long)ctx->gigapage10);
 }
 
 static int gb_test_vme_fill_init(struct kunit *test)
@@ -90,9 +94,33 @@ static int gb_test_vme_fill_init(struct kunit *test)
 	set_pte(&ctx->pte000_base[1], __pte(_PAGE_PRESENT | _PAGE_RW |
 					    _PAGE_USER | __pa(ctx->page0001)));
 
+	/* PGD[0][0][2] = HUGEPAGE002 (2MB, order=9) */
+	ctx->hugepage002 = (void *)__get_free_pages(GFP_KERNEL | __GFP_ZERO, 9);
+	if (!ctx->hugepage002)
+		goto hugepage002_fail;
+	kunit_info(test, "hugepage002(va)=%px, hugepage002(pa)=%px",
+		   ctx->hugepage002, (void *)__pa(ctx->hugepage002));
+	set_pmd(&ctx->pmd00_base[2],
+		__pmd(_PAGE_PRESENT | _PAGE_RW | _PAGE_USER |
+		      __pa(ctx->hugepage002) | _PAGE_PSE));
+
+	/* PGD[1][0] = GIGAPAGE10 (not actually 1GB) */
+	ctx->gigapage10 = (void *)__get_free_page(GFP_KERNEL | __GFP_ZERO);
+	if (!ctx->gigapage10)
+		goto gigapage10_fail;
+	kunit_info(test, "gigapage10(va)=%px, gigapage10(pa)=%px",
+		   ctx->gigapage10, (void *)__pa(ctx->gigapage10));
+	set_pud(&ctx->pud1_base[0],
+		__pud(_PAGE_PRESENT | _PAGE_RW | _PAGE_USER |
+		      __pa(ctx->gigapage10) | _PAGE_PSE));
+
 	test->priv = ctx;
 	return 0;
 
+gigapage10_fail:
+	free_page((unsigned long)ctx->gigapage10);
+hugepage002_fail:
+	free_page((unsigned long)ctx->page0001);
 page0001_fail:
 	free_page((unsigned long)ctx->pte000_base);
 pte000_fail:
@@ -130,7 +158,11 @@ static void gb_test_vme_fill__pgd_table(struct kunit *test)
 
 	path = (struct gb_vme_path){
 		.pgd_index = GB_VME_UNSPEC_INDEX,
+		.pud_index = GB_VME_UNSPEC_INDEX,
+		.pmd_index = GB_VME_UNSPEC_INDEX,
+		.pte_index = GB_VME_UNSPEC_INDEX,
 	};
+	KUNIT_ASSERT_TRUE(test, gb_vme_validate_path(path));
 	t0 = pgd_val(ctx->pgd_base[0]);
 	t1 = pgd_val(ctx->pgd_base[1]);
 	t2 = pgd_val(ctx->pgd_base[2]);
@@ -165,20 +197,27 @@ static void gb_test_vme_fill__pud_table(struct kunit *test)
 	path = (struct gb_vme_path){
 		.pgd_index = 1,
 		.pud_index = GB_VME_UNSPEC_INDEX,
+		.pmd_index = GB_VME_UNSPEC_INDEX,
+		.pte_index = GB_VME_UNSPEC_INDEX,
 	};
+	KUNIT_ASSERT_TRUE(test, gb_vme_validate_path(path));
 	t0 = pud_val(ctx->pud1_base[0]);
 	t1 = pud_val(ctx->pud1_base[1]);
 	t2 = pud_val(ctx->pud1_base[2]);
 	kunit_info(test, "pud1_base[0]=%px", (void *)t0);
 	kunit_info(test, "pud1_base[1]=%px", (void *)t1);
 	kunit_info(test, "pud1_base[2]=%px", (void *)t2);
-	KUNIT_ASSERT_EQ(test, t0, 0);
+	KUNIT_ASSERT_NE(test, t0, 0);
 	KUNIT_ASSERT_EQ(test, t1, 0);
 	KUNIT_ASSERT_EQ(test, t2, 0);
 
 	res = gb_vme_fill(vme, mm, path);
 	KUNIT_ASSERT_EQ(test, res, 0);
+
 	KUNIT_ASSERT_EQ(test, vme->entries[0].value, t0);
+	KUNIT_ASSERT_TRUE(test, vme->entries[0].leaf);
+	KUNIT_ASSERT_TRUE(test, vme->entries[0].bad);
+
 	KUNIT_ASSERT_EQ(test, vme->entries[1].value, t1);
 	KUNIT_ASSERT_EQ(test, vme->entries[2].value, t2);
 }
@@ -201,7 +240,9 @@ static void gb_test_vme_fill__pmd_table(struct kunit *test)
 		.pgd_index = 0,
 		.pud_index = 0,
 		.pmd_index = GB_VME_UNSPEC_INDEX,
+		.pte_index = GB_VME_UNSPEC_INDEX,
 	};
+	KUNIT_ASSERT_TRUE(test, gb_vme_validate_path(path));
 	t0 = pmd_val(ctx->pmd00_base[0]);
 	t1 = pmd_val(ctx->pmd00_base[1]);
 	t2 = pmd_val(ctx->pmd00_base[2]);
@@ -210,13 +251,16 @@ static void gb_test_vme_fill__pmd_table(struct kunit *test)
 	kunit_info(test, "pmd00_base[2]=%px", (void *)t2);
 	KUNIT_ASSERT_NE(test, t0, 0);
 	KUNIT_ASSERT_EQ(test, t1, 0);
-	KUNIT_ASSERT_EQ(test, t2, 0);
+	KUNIT_ASSERT_NE(test, t2, 0);
 
 	res = gb_vme_fill(vme, mm, path);
 	KUNIT_ASSERT_EQ(test, res, 0);
 	KUNIT_ASSERT_EQ(test, vme->entries[0].value, t0);
 	KUNIT_ASSERT_EQ(test, vme->entries[1].value, t1);
+
 	KUNIT_ASSERT_EQ(test, vme->entries[2].value, t2);
+	KUNIT_ASSERT_TRUE(test, vme->entries[2].leaf);
+	KUNIT_ASSERT_TRUE(test, vme->entries[2].bad);
 }
 
 static void gb_test_vme_fill__pte_table(struct kunit *test)
@@ -239,6 +283,7 @@ static void gb_test_vme_fill__pte_table(struct kunit *test)
 		.pmd_index = 0,
 		.pte_index = GB_VME_UNSPEC_INDEX,
 	};
+	KUNIT_ASSERT_TRUE(test, gb_vme_validate_path(path));
 	t0 = pte_val(ctx->pte000_base[0]);
 	t1 = pte_val(ctx->pte000_base[1]);
 	t2 = pte_val(ctx->pte000_base[2]);

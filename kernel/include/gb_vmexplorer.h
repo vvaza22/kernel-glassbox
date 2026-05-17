@@ -43,6 +43,10 @@ enum gb_vme_level {
 
 struct gb_vme_entry {
 	u64 value;
+	u64 pa;
+	u64 va;
+	bool bad;
+	bool leaf;
 };
 
 struct gb_vme {

@@ -57,11 +57,13 @@ static void _gb_vme_fill_pud(struct gb_vme *vme, pud_t *pud)
 		pud_t pud_entry = READ_ONCE(pud[i]);
 		struct gb_vme_entry *vme_entry_ptr = &vme->entries[i];
 
-		if (pud_none(pud_entry) || pud_bad(pud_entry)) {
+		if (pud_none(pud_entry)) {
 			continue;
 		}
 
 		vme_entry_ptr->value = pud_val(pud_entry);
+		vme_entry_ptr->bad = pud_bad(pud_entry);
+		vme_entry_ptr->leaf = pud_leaf(pud_entry);
 	}
 }
 
@@ -71,11 +73,13 @@ static void _gb_vme_fill_pmd(struct gb_vme *vme, pmd_t *pmd)
 		pmd_t pmd_entry = READ_ONCE(pmd[i]);
 		struct gb_vme_entry *vme_entry_ptr = &vme->entries[i];
 
-		if (pmd_none(pmd_entry) || pmd_bad(pmd_entry)) {
+		if (pmd_none(pmd_entry)) {
 			continue;
 		}
 
 		vme_entry_ptr->value = pmd_val(pmd_entry);
+		vme_entry_ptr->bad = pmd_bad(pmd_entry);
+		vme_entry_ptr->leaf = pmd_leaf(pmd_entry);
 	}
 }
 
@@ -90,6 +94,9 @@ static void _gb_vme_fill_pte(struct gb_vme *vme, pte_t *pte)
 		}
 
 		vme_entry_ptr->value = pte_val(pte_entry);
+		/* PTE entries are never bad and are always leaves */
+		vme_entry_ptr->bad = false;
+		vme_entry_ptr->leaf = true;
 	}
 }
 
@@ -110,7 +117,6 @@ static int _gb_vme_fill(struct gb_vme *vme, pgd_t *pgd_base,
 {
 	/*
 	TODO: Function is too big.
-	TODO: Add huge table support, 2MB + 1GB.
 	TODO: Add swapped out entry support.
 	*/
 	pgd_t pgd_entry;
@@ -141,7 +147,7 @@ static int _gb_vme_fill(struct gb_vme *vme, pgd_t *pgd_base,
 
 	/* Check PUD entry is present */
 	pud_entry = READ_ONCE(pud_base[path.pud_index]);
-	if (pud_none(pud_entry) || pud_bad(pud_entry) ||
+	if (pud_none(pud_entry) || pud_bad(pud_entry) || pud_leaf(pud_entry) ||
 	    !pud_present(pud_entry)) {
 		return -EFAULT;
 	}
@@ -155,7 +161,7 @@ static int _gb_vme_fill(struct gb_vme *vme, pgd_t *pgd_base,
 
 	/* Check PMD entry is present */
 	pmd_entry = READ_ONCE(pmd_base[path.pmd_index]);
-	if (pmd_none(pmd_entry) || pmd_bad(pmd_entry) ||
+	if (pmd_none(pmd_entry) || pmd_bad(pmd_entry) || pmd_leaf(pmd_entry) ||
 	    !pmd_present(pmd_entry)) {
 		return -EFAULT;
 	}
