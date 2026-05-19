@@ -9,7 +9,6 @@
 /*
 TODO: Improve tests with more high-level linux functions,
 will need update after per-pagetable locks are implemented
-TODO: Add free
 */
 
 struct gb_test_vme_fill_ctx {
