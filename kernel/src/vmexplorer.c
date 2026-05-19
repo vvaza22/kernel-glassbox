@@ -288,6 +288,13 @@ vme_fail:
 	return ERR_PTR(res);
 }
 
+void gb_vme_free(struct gb_vme *vme)
+{
+	if (!vme)
+		return;
+	kfree(vme);
+}
+
 #ifdef CONFIG_KUNIT
 #include "vmexplorer_test.c"
 #endif
