@@ -5,7 +5,7 @@
 #include <linux/netlink.h>
 #include <net/genetlink.h>
 
-const struct nla_policy gb_nl_vme_dump_pol[GB_NL_ATTR_MAX + 1];
+extern const struct nla_policy gb_nl_vme_dump_pol[GB_NL_ATTR_MAX + 1];
 
 int gb_nl_vme_dump_start(struct netlink_callback *cb);
 int gb_nl_vme_dump(struct sk_buff *skb, struct netlink_callback *cb);

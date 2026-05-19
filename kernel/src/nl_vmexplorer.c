@@ -3,16 +3,17 @@
 #include "gb_netlink.h"
 #include "gb_nl_vmexplorer.h"
 #include "linux/netlink.h"
+#include "linux/printk.h"
 #include <linux/bug.h>
 #include <linux/netlink.h>
 #include <linux/sched/cputime.h>
 #include <net/genetlink.h>
 
 const struct nla_policy gb_nl_vme_dump_pol[GB_NL_ATTR_MAX + 1] = {
-	[GB_NL_ATTR_VME_PGD_INDEX] = { .type = NLA_U32 },
-	[GB_NL_ATTR_VME_PUD_INDEX] = { .type = NLA_U32 },
-	[GB_NL_ATTR_VME_PMD_INDEX] = { .type = NLA_U32 },
-	[GB_NL_ATTR_VME_PTE_INDEX] = { .type = NLA_U32 },
+	[GB_NL_ATTR_VME_PGD_INDEX] = { .type = NLA_S32 },
+	[GB_NL_ATTR_VME_PUD_INDEX] = { .type = NLA_S32 },
+	[GB_NL_ATTR_VME_PMD_INDEX] = { .type = NLA_S32 },
+	[GB_NL_ATTR_VME_PTE_INDEX] = { .type = NLA_S32 },
 	[GB_NL_ATTR_VME_PID] = { .type = NLA_U32 },
 	[GB_NL_ATTR_VME_START_TIME] = { .type = NLA_U64 },
 };
@@ -29,10 +30,10 @@ static bool gb_nl_vme_populate_args(struct nlattr **attrs,
 		return false;
 	}
 
-	path->pgd_index = nla_get_u32(attrs[GB_NL_ATTR_VME_PGD_INDEX]);
-	path->pud_index = nla_get_u32(attrs[GB_NL_ATTR_VME_PUD_INDEX]);
-	path->pmd_index = nla_get_u32(attrs[GB_NL_ATTR_VME_PMD_INDEX]);
-	path->pte_index = nla_get_u32(attrs[GB_NL_ATTR_VME_PTE_INDEX]);
+	path->gb_vme_pgd_index = nla_get_s32(attrs[GB_NL_ATTR_VME_PGD_INDEX]);
+	path->gb_vme_pud_index = nla_get_s32(attrs[GB_NL_ATTR_VME_PUD_INDEX]);
+	path->gb_vme_pmd_index = nla_get_s32(attrs[GB_NL_ATTR_VME_PMD_INDEX]);
+	path->gb_vme_pte_index = nla_get_s32(attrs[GB_NL_ATTR_VME_PTE_INDEX]);
 	key->pid = nla_get_u32(attrs[GB_NL_ATTR_VME_PID]);
 	key->start_time = nla_get_u64(attrs[GB_NL_ATTR_VME_START_TIME]);
 
@@ -67,6 +68,7 @@ int gb_nl_vme_dump_start(struct netlink_callback *cb)
 	struct gb_task_key key;
 	struct gb_vme_path path;
 	struct gb_vme *vme;
+	int i;
 
 	NL_ASSERT_DUMP_CTX_FITS(struct gb_nl_vme_dump_ctx);
 	ctx = (struct gb_nl_vme_dump_ctx *)cb->ctx;
@@ -87,6 +89,19 @@ int gb_nl_vme_dump_start(struct netlink_callback *cb)
 		       PTR_ERR(vme));
 		return PTR_ERR(vme);
 	}
+	BUG_ON(!vme);
+
+	pr_info("%s: Dumping VME for task (%d, %llu), path PGD[%d]->PUD[%d]->PMD[%d]->PTE[%d]\n",
+		__func__, key.pid, key.start_time, path.gb_vme_pgd_index,
+		path.gb_vme_pud_index, path.gb_vme_pmd_index,
+		path.gb_vme_pte_index);
+
+	for (i = 0; i < GB_VME_NUM_ENTRIES; i++) {
+		struct gb_vme_entry *entry = &vme->entries[i];
+		pr_info("%s: Entry %d: value=%016llx, pa=%016llx, kernel_va=%016llx, user_va=%016llx, bad=%d, leaf=%d\n",
+			__func__, i, entry->value, entry->pa, entry->kernel_va,
+			entry->user_va, entry->bad, entry->leaf);
+	}
 
 	ctx->vme = vme;
 	return 0;
@@ -96,6 +111,7 @@ int gb_nl_vme_dump(struct sk_buff *skb, struct netlink_callback *cb)
 {
 	struct gb_nl_vme_dump_ctx *ctx = (struct gb_nl_vme_dump_ctx *)cb->ctx;
 	struct gb_vme *vme = ctx->vme;
+	int index_start = ctx->index;
 
 	if (!vme)
 		return 0;
@@ -105,6 +121,9 @@ int gb_nl_vme_dump(struct sk_buff *skb, struct netlink_callback *cb)
 			break;
 		ctx->index++;
 	}
+
+	pr_info("%s: Dumping VME from index %d to %d\n", __func__, index_start,
+		ctx->index);
 
 	return skb->len;
 }

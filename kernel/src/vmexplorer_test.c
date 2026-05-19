@@ -162,10 +162,10 @@ static void gb_test_vme_fill__pgd_table(struct kunit *test)
 	kunit_info(test, "vme=%px", vme);
 
 	path = (struct gb_vme_path){
-		.pgd_index = GB_VME_UNSPEC_INDEX,
-		.pud_index = GB_VME_UNSPEC_INDEX,
-		.pmd_index = GB_VME_UNSPEC_INDEX,
-		.pte_index = GB_VME_UNSPEC_INDEX,
+		.gb_vme_pgd_index = GB_VME_UNSPEC_INDEX,
+		.gb_vme_pud_index = GB_VME_UNSPEC_INDEX,
+		.gb_vme_pmd_index = GB_VME_UNSPEC_INDEX,
+		.gb_vme_pte_index = GB_VME_UNSPEC_INDEX,
 	};
 	KUNIT_ASSERT_TRUE(test, gb_vme_validate_path(path));
 	t0 = pgd_val(ctx->pgd_base[0]);
@@ -200,10 +200,10 @@ static void gb_test_vme_fill__pud_table(struct kunit *test)
 
 	/* Explore PUD1 at PGD[1] */
 	path = (struct gb_vme_path){
-		.pgd_index = 1,
-		.pud_index = GB_VME_UNSPEC_INDEX,
-		.pmd_index = GB_VME_UNSPEC_INDEX,
-		.pte_index = GB_VME_UNSPEC_INDEX,
+		.gb_vme_pgd_index = 1,
+		.gb_vme_pud_index = GB_VME_UNSPEC_INDEX,
+		.gb_vme_pmd_index = GB_VME_UNSPEC_INDEX,
+		.gb_vme_pte_index = GB_VME_UNSPEC_INDEX,
 	};
 	KUNIT_ASSERT_TRUE(test, gb_vme_validate_path(path));
 	t0 = pud_val(ctx->pud1_base[0]);
@@ -242,10 +242,10 @@ static void gb_test_vme_fill__pmd_table(struct kunit *test)
 
 	/* Explore PMD00 at PGD[0][0] */
 	path = (struct gb_vme_path){
-		.pgd_index = 0,
-		.pud_index = 0,
-		.pmd_index = GB_VME_UNSPEC_INDEX,
-		.pte_index = GB_VME_UNSPEC_INDEX,
+		.gb_vme_pgd_index = 0,
+		.gb_vme_pud_index = 0,
+		.gb_vme_pmd_index = GB_VME_UNSPEC_INDEX,
+		.gb_vme_pte_index = GB_VME_UNSPEC_INDEX,
 	};
 	KUNIT_ASSERT_TRUE(test, gb_vme_validate_path(path));
 	t0 = pmd_val(ctx->pmd00_base[0]);
@@ -283,10 +283,10 @@ static void gb_test_vme_fill__pte_table(struct kunit *test)
 
 	/* Explore PTE000 at PGD[0][0][0] */
 	path = (struct gb_vme_path){
-		.pgd_index = 0,
-		.pud_index = 0,
-		.pmd_index = 0,
-		.pte_index = GB_VME_UNSPEC_INDEX,
+		.gb_vme_pgd_index = 0,
+		.gb_vme_pud_index = 0,
+		.gb_vme_pmd_index = 0,
+		.gb_vme_pte_index = GB_VME_UNSPEC_INDEX,
 	};
 	KUNIT_ASSERT_TRUE(test, gb_vme_validate_path(path));
 	t0 = pte_val(ctx->pte000_base[0]);

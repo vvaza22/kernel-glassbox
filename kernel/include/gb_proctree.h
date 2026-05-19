@@ -3,6 +3,7 @@
 
 #include "gb_model.h"
 #include <linux/types.h>
+#include <linux/sched.h>
 
 #define GB_PROCTREE_MAX_NODES 1000
 

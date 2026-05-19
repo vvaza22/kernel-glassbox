@@ -13,6 +13,23 @@ Possible flags for page table entries from linux source code:
 https://elixir.bootlin.com/linux/v6.12.74/source/arch/x86/include/asm/pgtable_types.h#L10 
 */
 
+/** 
+ * pud_page_vaddr - Get virtual address of PUD entry
+ *
+ * Note: I had to implement this because kernel does not provide pud_page_vaddr()
+ * I used the implementation of pgd_page_vaddr() as reference:
+ * https://elixir.bootlin.com/linux/v6.12.74/source/arch/x86/include/asm/pgtable.h#L1190
+ */
+static inline unsigned long pud_page_vaddr(pud_t pud)
+{
+	return (unsigned long)__va(pud_val(pud) & pud_pfn_mask(pud));
+}
+
+static inline unsigned long pte_page_vaddr(pte_t pte)
+{
+	return (unsigned long)__va(pte_pfn(pte) << PAGE_SHIFT);
+}
+
 int gb_vme_sanity_check(void)
 {
 #ifdef CONFIG_X86_PAE
@@ -36,28 +53,67 @@ int gb_vme_sanity_check(void)
 	if (pgtable_l5_enabled()) {
 		pr_err("%s: 5-level page tables are not supported\n", __func__);
 		return -ENOTSUPP;
-	} else {
-		pr_info("%s: Using 4-level page tables\n", __func__);
 	}
 
 	return 0;
 }
 
-static void _gb_vme_fill_pgd(struct gb_vme *vme, pgd_t *pgd)
+static u64 gb_vme_path_to_user_va(struct gb_vme_path path)
+{
+	u64 va = 0;
+
+	if (path.gb_vme_pgd_index != GB_VME_UNSPEC_INDEX)
+		va |= (u64)path.gb_vme_pgd_index << PGDIR_SHIFT;
+
+	if (path.gb_vme_pud_index != GB_VME_UNSPEC_INDEX)
+		va |= (u64)path.gb_vme_pud_index << PUD_SHIFT;
+
+	if (path.gb_vme_pmd_index != GB_VME_UNSPEC_INDEX)
+		va |= (u64)path.gb_vme_pmd_index << PMD_SHIFT;
+
+	if (path.gb_vme_pte_index != GB_VME_UNSPEC_INDEX)
+		va |= (u64)path.gb_vme_pte_index << PAGE_SHIFT;
+
+	/* 
+	Virtual address should be in canonical form, which means bits 63:48 should repeat bit 47.
+	Turns out this is a CPU level restriction for x86-64 architecture.
+	Source: https://dev.to/junyaa/x64-virtual-address-translation-3bmb 
+	*/
+	if (va & (1UL << 47))
+		va |= (u64)0xffff000000000000UL;
+
+	return va;
+}
+
+static void _gb_vme_fill_pgd(struct gb_vme *vme, pgd_t *pgd,
+			     struct gb_vme_path path)
 {
 	for (int i = 0; i < PTRS_PER_PGD; i++) {
 		pgd_t pgd_entry = READ_ONCE(pgd[i]);
 		struct gb_vme_entry *vme_entry_ptr = &vme->entries[i];
 
-		if (pgd_none(pgd_entry) || pgd_bad(pgd_entry)) {
+		if (pgd_none(pgd_entry)) {
 			continue;
 		}
 
 		vme_entry_ptr->value = pgd_val(pgd_entry);
+		vme_entry_ptr->kernel_va = (u64)pgd_page_vaddr(pgd_entry);
+		vme_entry_ptr->user_va =
+			gb_vme_path_to_user_va((struct gb_vme_path){
+				.gb_vme_pgd_index = i,
+				.gb_vme_pud_index = path.gb_vme_pud_index,
+				.gb_vme_pmd_index = path.gb_vme_pmd_index,
+				.gb_vme_pte_index = path.gb_vme_pte_index,
+			});
+		vme_entry_ptr->pa = (u64)__pa(vme_entry_ptr->kernel_va);
+		vme_entry_ptr->present = pgd_present(pgd_entry);
+		vme_entry_ptr->bad = pgd_bad(pgd_entry);
+		vme_entry_ptr->leaf = pgd_leaf(pgd_entry);
 	}
 }
 
-static void _gb_vme_fill_pud(struct gb_vme *vme, pud_t *pud)
+static void _gb_vme_fill_pud(struct gb_vme *vme, pud_t *pud,
+			     struct gb_vme_path path)
 {
 	for (int i = 0; i < PTRS_PER_PUD; i++) {
 		pud_t pud_entry = READ_ONCE(pud[i]);
@@ -68,12 +124,23 @@ static void _gb_vme_fill_pud(struct gb_vme *vme, pud_t *pud)
 		}
 
 		vme_entry_ptr->value = pud_val(pud_entry);
+		vme_entry_ptr->kernel_va = (u64)pud_page_vaddr(pud_entry);
+		vme_entry_ptr->user_va =
+			gb_vme_path_to_user_va((struct gb_vme_path){
+				.gb_vme_pgd_index = path.gb_vme_pgd_index,
+				.gb_vme_pud_index = i,
+				.gb_vme_pmd_index = path.gb_vme_pmd_index,
+				.gb_vme_pte_index = path.gb_vme_pte_index,
+			});
+		vme_entry_ptr->pa = (u64)__pa((void *)vme_entry_ptr->kernel_va);
+		vme_entry_ptr->present = pud_present(pud_entry);
 		vme_entry_ptr->bad = pud_bad(pud_entry);
 		vme_entry_ptr->leaf = pud_leaf(pud_entry);
 	}
 }
 
-static void _gb_vme_fill_pmd(struct gb_vme *vme, pmd_t *pmd)
+static void _gb_vme_fill_pmd(struct gb_vme *vme, pmd_t *pmd,
+			     struct gb_vme_path path)
 {
 	for (int i = 0; i < PTRS_PER_PMD; i++) {
 		pmd_t pmd_entry = READ_ONCE(pmd[i]);
@@ -84,12 +151,23 @@ static void _gb_vme_fill_pmd(struct gb_vme *vme, pmd_t *pmd)
 		}
 
 		vme_entry_ptr->value = pmd_val(pmd_entry);
+		vme_entry_ptr->kernel_va = (u64)pmd_page_vaddr(pmd_entry);
+		vme_entry_ptr->user_va =
+			gb_vme_path_to_user_va((struct gb_vme_path){
+				.gb_vme_pgd_index = path.gb_vme_pgd_index,
+				.gb_vme_pud_index = path.gb_vme_pud_index,
+				.gb_vme_pmd_index = i,
+				.gb_vme_pte_index = path.gb_vme_pte_index,
+			});
+		vme_entry_ptr->pa = (u64)__pa((void *)vme_entry_ptr->kernel_va);
+		vme_entry_ptr->present = pmd_present(pmd_entry);
 		vme_entry_ptr->bad = pmd_bad(pmd_entry);
 		vme_entry_ptr->leaf = pmd_leaf(pmd_entry);
 	}
 }
 
-static void _gb_vme_fill_pte(struct gb_vme *vme, pte_t *pte)
+static void _gb_vme_fill_pte(struct gb_vme *vme, pte_t *pte,
+			     struct gb_vme_path path)
 {
 	for (int i = 0; i < PTRS_PER_PTE; i++) {
 		pte_t pte_entry = READ_ONCE(pte[i]);
@@ -100,22 +178,20 @@ static void _gb_vme_fill_pte(struct gb_vme *vme, pte_t *pte)
 		}
 
 		vme_entry_ptr->value = pte_val(pte_entry);
+		vme_entry_ptr->kernel_va = (u64)pte_page_vaddr(pte_entry);
+		vme_entry_ptr->user_va =
+			gb_vme_path_to_user_va((struct gb_vme_path){
+				.gb_vme_pgd_index = path.gb_vme_pgd_index,
+				.gb_vme_pud_index = path.gb_vme_pud_index,
+				.gb_vme_pmd_index = path.gb_vme_pmd_index,
+				.gb_vme_pte_index = i,
+			});
+		vme_entry_ptr->pa = (u64)__pa((void *)vme_entry_ptr->kernel_va);
+		vme_entry_ptr->present = pte_present(pte_entry);
 		/* PTE entries are never bad and are always leaves */
 		vme_entry_ptr->bad = false;
 		vme_entry_ptr->leaf = true;
 	}
-}
-
-/** 
- * pud_page_vaddr - Get virtual address of PUD entry
- *
- * Note: I had to implement this because kernel does not provide pud_page_vaddr()
- * I used the implementation of pgd_page_vaddr() as reference:
- * https://elixir.bootlin.com/linux/v6.12.74/source/arch/x86/include/asm/pgtable.h#L1190
- */
-static inline unsigned long pud_page_vaddr(pud_t pud)
-{
-	return (unsigned long)__va(pud_val(pud) & pud_pfn_mask(pud));
 }
 
 static int _gb_vme_fill(struct gb_vme *vme, pgd_t *pgd_base,
@@ -135,13 +211,13 @@ static int _gb_vme_fill(struct gb_vme *vme, pgd_t *pgd_base,
 	pmd_t *pmd_base;
 	pte_t *pte_base;
 
-	if (path.pgd_index == GB_VME_UNSPEC_INDEX) {
-		_gb_vme_fill_pgd(vme, pgd_base);
+	if (path.gb_vme_pgd_index == GB_VME_UNSPEC_INDEX) {
+		_gb_vme_fill_pgd(vme, pgd_base, path);
 		return 0;
 	}
 
 	/* Check PGD entry is present */
-	pgd_entry = READ_ONCE(pgd_base[path.pgd_index]);
+	pgd_entry = READ_ONCE(pgd_base[path.gb_vme_pgd_index]);
 	if (pgd_none(pgd_entry) || pgd_bad(pgd_entry) ||
 	    !pgd_present(pgd_entry)) {
 		return -EFAULT;
@@ -149,13 +225,13 @@ static int _gb_vme_fill(struct gb_vme *vme, pgd_t *pgd_base,
 
 	/* Get PUD */
 	pud_base = (pud_t *)pgd_page_vaddr(pgd_entry);
-	if (path.pud_index == GB_VME_UNSPEC_INDEX) {
-		_gb_vme_fill_pud(vme, pud_base);
+	if (path.gb_vme_pud_index == GB_VME_UNSPEC_INDEX) {
+		_gb_vme_fill_pud(vme, pud_base, path);
 		return 0;
 	}
 
 	/* Check PUD entry is present */
-	pud_entry = READ_ONCE(pud_base[path.pud_index]);
+	pud_entry = READ_ONCE(pud_base[path.gb_vme_pud_index]);
 	if (pud_none(pud_entry) || pud_bad(pud_entry) || pud_leaf(pud_entry) ||
 	    !pud_present(pud_entry)) {
 		return -EFAULT;
@@ -163,13 +239,13 @@ static int _gb_vme_fill(struct gb_vme *vme, pgd_t *pgd_base,
 
 	/* Get PMD */
 	pmd_base = (pmd_t *)pud_page_vaddr(pud_entry);
-	if (path.pmd_index == GB_VME_UNSPEC_INDEX) {
-		_gb_vme_fill_pmd(vme, pmd_base);
+	if (path.gb_vme_pmd_index == GB_VME_UNSPEC_INDEX) {
+		_gb_vme_fill_pmd(vme, pmd_base, path);
 		return 0;
 	}
 
 	/* Check PMD entry is present */
-	pmd_entry = READ_ONCE(pmd_base[path.pmd_index]);
+	pmd_entry = READ_ONCE(pmd_base[path.gb_vme_pmd_index]);
 	if (pmd_none(pmd_entry) || pmd_bad(pmd_entry) || pmd_leaf(pmd_entry) ||
 	    !pmd_present(pmd_entry)) {
 		return -EFAULT;
@@ -177,8 +253,8 @@ static int _gb_vme_fill(struct gb_vme *vme, pgd_t *pgd_base,
 
 	/* Get PTE */
 	pte_base = (pte_t *)pmd_page_vaddr(pmd_entry);
-	if (path.pte_index == GB_VME_UNSPEC_INDEX) {
-		_gb_vme_fill_pte(vme, pte_base);
+	if (path.gb_vme_pte_index == GB_VME_UNSPEC_INDEX) {
+		_gb_vme_fill_pte(vme, pte_base, path);
 		return 0;
 	}
 
@@ -201,38 +277,42 @@ VISIBLE_IF_KUNIT int gb_vme_fill(struct gb_vme *vme, struct mm_struct *mm,
 VISIBLE_IF_KUNIT bool gb_vme_validate_path(struct gb_vme_path path)
 {
 	/* PGD -> PUD -> PMD -> PTE */
-	if (path.pgd_index == GB_VME_UNSPEC_INDEX) {
-		return path.pud_index == GB_VME_UNSPEC_INDEX &&
-		       path.pmd_index == GB_VME_UNSPEC_INDEX &&
-		       path.pte_index == GB_VME_UNSPEC_INDEX;
+	if (path.gb_vme_pgd_index == GB_VME_UNSPEC_INDEX) {
+		return path.gb_vme_pud_index == GB_VME_UNSPEC_INDEX &&
+		       path.gb_vme_pmd_index == GB_VME_UNSPEC_INDEX &&
+		       path.gb_vme_pte_index == GB_VME_UNSPEC_INDEX;
 	}
 
-	if (path.pgd_index < 0 || path.pgd_index >= PTRS_PER_PGD) {
+	if (path.gb_vme_pgd_index < 0 ||
+	    path.gb_vme_pgd_index >= PTRS_PER_PGD) {
 		return false;
 	}
 
-	if (path.pud_index == GB_VME_UNSPEC_INDEX) {
-		return path.pmd_index == GB_VME_UNSPEC_INDEX &&
-		       path.pte_index == GB_VME_UNSPEC_INDEX;
+	if (path.gb_vme_pud_index == GB_VME_UNSPEC_INDEX) {
+		return path.gb_vme_pmd_index == GB_VME_UNSPEC_INDEX &&
+		       path.gb_vme_pte_index == GB_VME_UNSPEC_INDEX;
 	}
 
-	if (path.pud_index < 0 || path.pud_index >= PTRS_PER_PUD) {
+	if (path.gb_vme_pud_index < 0 ||
+	    path.gb_vme_pud_index >= PTRS_PER_PUD) {
 		return false;
 	}
 
-	if (path.pmd_index == GB_VME_UNSPEC_INDEX) {
-		return path.pte_index == GB_VME_UNSPEC_INDEX;
+	if (path.gb_vme_pmd_index == GB_VME_UNSPEC_INDEX) {
+		return path.gb_vme_pte_index == GB_VME_UNSPEC_INDEX;
 	}
 
-	if (path.pmd_index < 0 || path.pmd_index >= PTRS_PER_PMD) {
+	if (path.gb_vme_pmd_index < 0 ||
+	    path.gb_vme_pmd_index >= PTRS_PER_PMD) {
 		return false;
 	}
 
-	if (path.pte_index == GB_VME_UNSPEC_INDEX) {
+	if (path.gb_vme_pte_index == GB_VME_UNSPEC_INDEX) {
 		return true;
 	}
 
-	if (path.pte_index < 0 || path.pte_index >= PTRS_PER_PTE) {
+	if (path.gb_vme_pte_index < 0 ||
+	    path.gb_vme_pte_index >= PTRS_PER_PTE) {
 		return false;
 	}
 

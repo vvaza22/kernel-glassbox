@@ -13,7 +13,8 @@ glassbox-y := \
 	src/taskview.o \
 	src/vmexplorer.o \
 	src/nl_proctree.o \
-	src/nl_taskview.o
+	src/nl_taskview.o \
+	src/nl_vmexplorer.o
 ccflags-y := -I$(src)/../include
 
 else

@@ -46,22 +46,27 @@ struct gb_vme_entry {
 	u64 pa;
 	u64 kernel_va;
 	u64 user_va;
+	bool present;
 	bool bad;
 	bool leaf;
 };
 
 struct gb_vme {
 	struct gb_vme_entry entries[GB_VME_NUM_ENTRIES];
-	enum gb_vme_level level;
 };
 
 #define GB_VME_UNSPEC_INDEX -1
 
+/*
+	Remainder to myself: ALWAYS prefix field names.
+	pgd_index turns out to be a MACRO in linux/pgtable.h, 
+	naming struct field pgd_index messes up the whole code.
+*/
 struct gb_vme_path {
-	int pgd_index;
-	int pud_index;
-	int pmd_index;
-	int pte_index;
+	int gb_vme_pgd_index;
+	int gb_vme_pud_index;
+	int gb_vme_pmd_index;
+	int gb_vme_pte_index;
 };
 
 int gb_vme_sanity_check(void);
