@@ -6,6 +6,11 @@
 #include <kunit/test.h>
 #include <linux/sched/mm.h>
 
+/*
+TODO: Improve tests with more high-level linux functions,
+will need update after per-pagetable locks are implemented
+*/
+
 struct gb_test_vme_fill_ctx {
 	struct mm_struct *mm;
 	pgd_t *pgd_base;

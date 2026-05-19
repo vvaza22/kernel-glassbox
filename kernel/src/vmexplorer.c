@@ -19,6 +19,12 @@ int gb_vme_sanity_check(void)
 /* https://elixir.bootlin.com/linux/v6.12.74/source/arch/x86/mm/pgtable.c#L367 */
 #error "Physical Address Extension (PAE) is not supported"
 #endif
+#ifndef CONFIG_SPLIT_PTE_PTLOCKS
+#error "Split PTE PTLocks must be enabled"
+#endif
+#ifndef CONFIG_TRANSPARENT_HUGEPAGE
+#error "Transparent hugepages are supported"
+#endif
 
 	/* Make sure the current architecture has 512 entries on each level */
 	BUILD_BUG_ON(GB_VME_NUM_ENTRIES != PTRS_PER_PTE);
@@ -117,6 +123,9 @@ static int _gb_vme_fill(struct gb_vme *vme, pgd_t *pgd_base,
 {
 	/*
 	TODO: Function is too big.
+	TODO: Has potential locking issues. Research: pte_lockptr, pmd_lockptr, pud_lockptr.
+	https://elixir.bootlin.com/linux/v6.12.74/source/include/linux/mm.h#L3183
+	https://lwn.net/Articles/568076/
 	TODO: Add swapped out entry support.
 	*/
 	pgd_t pgd_entry;
@@ -241,6 +250,7 @@ struct gb_vme *gb_vme_get(struct gb_task_key key, struct gb_vme_path path)
 		return ERR_PTR(-EINVAL);
 	}
 
+	/* TODO: I should consider switching to vzalloc */
 	vme = kzalloc(sizeof(*vme), GFP_KERNEL);
 	if (!vme) {
 		res = -ENOMEM;
