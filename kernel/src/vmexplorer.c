@@ -324,8 +324,8 @@ static int __gb_vme_fill(struct gb_vme *vme, pgd_t *pgd,
 	return -ENOTSUPP;
 }
 
-VISIBLE_IF_KUNIT int _gb_vme_fill(struct gb_vme *vme, struct mm_struct *mm,
-				  struct gb_vme_path path)
+static int _gb_vme_fill(struct gb_vme *vme, struct mm_struct *mm,
+			struct gb_vme_path path)
 {
 	int res;
 
@@ -388,7 +388,6 @@ struct gb_vme *gb_vme_get(struct gb_task_key key, struct gb_vme_path path)
 		return ERR_PTR(-EINVAL);
 	}
 
-	/* TODO: I should consider switching to vzalloc */
 	vme = kzalloc(sizeof(*vme), GFP_KERNEL);
 	if (!vme) {
 		res = -ENOMEM;
@@ -432,7 +431,3 @@ void gb_vme_free(struct gb_vme *vme)
 		return;
 	kfree(vme);
 }
-
-#ifdef CONFIG_KUNIT
-#include "vmexplorer_test.c"
-#endif
