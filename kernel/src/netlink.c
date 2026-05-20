@@ -1,6 +1,7 @@
 #include "gb_netlink.h"
 #include "gb_nl_proctree.h"
 #include "gb_nl_taskview.h"
+#include "gb_nl_vmexplorer.h"
 #include <linux/netlink.h>
 #include <net/genetlink.h>
 
@@ -22,7 +23,15 @@ static const struct genl_ops gb_genl_ops[] = {
 		.doit = gb_nl_taskview_get,
 		.policy = gb_nl_taskview_get_pol,
 		.maxattr = GB_NL_ATTR_MAX,
-	}
+	},
+	{
+		.cmd = GB_NL_CMD_VME_DUMP,
+		.start = gb_nl_vme_dump_start,
+		.dumpit = gb_nl_vme_dump,
+		.done = gb_nl_vme_dump_done,
+		.policy = gb_nl_vme_dump_pol,
+		.maxattr = GB_NL_ATTR_MAX,
+	},
 };
 
 struct genl_family gb_genl_family = {

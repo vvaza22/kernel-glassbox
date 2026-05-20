@@ -12,6 +12,9 @@ const (
 
 	// Taskview
 	CmdTaskviewGet
+
+	// VMExplorer
+	CmdVMExplorerDump
 )
 
 const (
@@ -24,6 +27,15 @@ const (
 	AttrTaskviewPid
 	AttrTaskviewStartTime
 	AttrTaskviewData
+
+	// VMExplorer
+	AttrVMExplorerPGD
+	AttrVMExplorerPUD
+	AttrVMExplorerPMD
+	AttrVMExplorerPTE
+	AttrVMExplorerPID
+	AttrVMExplorerStartTime
+	AttrVMExplorerEntry
 )
 
 type NetlinkCtx struct {

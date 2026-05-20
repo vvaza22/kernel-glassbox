@@ -10,14 +10,16 @@ import (
 type NetlinkClient interface {
 	Proctree() ProctreeClient
 	Taskview() TaskviewClient
+	VMExplorer() VMExplorerClient
 	Destroy() error
 }
 
 type netlinkClient struct {
-	conn           *genetlink.Conn
-	family         genetlink.Family
-	proctreeClient ProctreeClient
-	taskviewClient TaskviewClient
+	conn             *genetlink.Conn
+	family           genetlink.Family
+	proctreeClient   ProctreeClient
+	taskviewClient   TaskviewClient
+	vmexplorerClient VMExplorerClient
 }
 
 func NewNetlinkClient() (NetlinkClient, error) {
@@ -47,6 +49,11 @@ func NewNetlinkClient() (NetlinkClient, error) {
 		Family: family,
 	})
 
+	nlClient.vmexplorerClient = NewVMExplorerClient(&model.NetlinkCtx{
+		Conn:   conn,
+		Family: family,
+	})
+
 	return nlClient, nil
 }
 
@@ -56,6 +63,10 @@ func (c *netlinkClient) Proctree() ProctreeClient {
 
 func (c *netlinkClient) Taskview() TaskviewClient {
 	return c.taskviewClient
+}
+
+func (c *netlinkClient) VMExplorer() VMExplorerClient {
+	return c.vmexplorerClient
 }
 
 func (c *netlinkClient) Destroy() error {
