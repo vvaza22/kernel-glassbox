@@ -1,4 +1,5 @@
 #include "gb_vmexplorer.h"
+#include "linux/gfp.h"
 #include <asm/pgtable.h>
 #include <asm/pgtable_64_types.h>
 #include <asm/pgtable_types.h>
@@ -123,7 +124,7 @@ static int gb_test_vme_fill_init(struct kunit *test)
 	return 0;
 
 gigapage10_fail:
-	free_page((unsigned long)ctx->gigapage10);
+	free_pages((unsigned long)ctx->hugepage002, 9);
 hugepage002_fail:
 	free_page((unsigned long)ctx->page0001);
 page0001_fail:

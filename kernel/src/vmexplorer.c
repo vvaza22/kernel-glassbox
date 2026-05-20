@@ -26,7 +26,7 @@ int gb_vme_sanity_check(void)
 #error "Split PTE PTLocks must be enabled"
 #endif
 #ifndef CONFIG_TRANSPARENT_HUGEPAGE
-#error "Transparent hugepages are supported"
+#error "THP must be enabled for go tests to work"
 #endif
 
 	/* Make sure the current architecture has 512 entries on each level */
@@ -112,8 +112,7 @@ static u64 _gb_vme_l1_kernel_va(pte_t entry)
 	return (u64)__va(_gb_vme_l1_pa(entry));
 }
 
-static void _gb_vme_fill_l4(struct gb_vme *vme, p4d_t *base,
-			    struct gb_vme_path path)
+static void _gb_vme_fill_l4(struct gb_vme *vme, p4d_t *base)
 {
 	for (int i = 0; i < GB_VME_NUM_ENTRIES; i++) {
 		p4d_t entry = p4dp_get(base + i);
@@ -287,7 +286,7 @@ static int __gb_vme_fill(struct gb_vme *vme, pgd_t *pgd,
 	pte_t *l1_base;
 
 	if (path.l4 == GB_VME_UNSPEC_INDEX) {
-		_gb_vme_fill_l4(vme, l4_base, path);
+		_gb_vme_fill_l4(vme, l4_base);
 		return 0;
 	}
 

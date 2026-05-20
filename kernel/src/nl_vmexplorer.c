@@ -89,18 +89,10 @@ int gb_nl_vme_dump_start(struct netlink_callback *cb)
 		       PTR_ERR(vme));
 		return PTR_ERR(vme);
 	}
-	BUG_ON(!vme);
 
 	pr_info("%s: Dumping VME for task (%d, %llu), path L4[%d]->L3[%d]->L2[%d]->L1[%d]\n",
 		__func__, key.pid, key.start_time, path.l4, path.l3, path.l2,
 		path.l1);
-
-	for (i = 0; i < GB_VME_NUM_ENTRIES; i++) {
-		struct gb_vme_entry *entry = &vme->entries[i];
-		pr_info("%s: Entry %d: value=%016llx, pa=%016llx, kernel_va=%016llx, user_va=%016llx, bad=%d, leaf=%d\n",
-			__func__, i, entry->value, entry->pa, entry->kernel_va,
-			entry->user_va, entry->bad, entry->leaf);
-	}
 
 	ctx->vme = vme;
 	return 0;
