@@ -68,7 +68,6 @@ int gb_nl_vme_dump_start(struct netlink_callback *cb)
 	struct gb_task_key key;
 	struct gb_vme_path path;
 	struct gb_vme *vme;
-	int i;
 
 	NL_ASSERT_DUMP_CTX_FITS(struct gb_nl_vme_dump_ctx);
 	ctx = (struct gb_nl_vme_dump_ctx *)cb->ctx;

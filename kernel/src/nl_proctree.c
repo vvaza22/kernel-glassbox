@@ -1,4 +1,3 @@
-#include "gb_model.h"
 #include "gb_netlink.h"
 #include "gb_nl_proctree.h"
 #include "gb_proctree.h"
