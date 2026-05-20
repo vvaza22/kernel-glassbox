@@ -162,12 +162,12 @@ static void gb_test_vme_fill__pgd_table(struct kunit *test)
 	kunit_info(test, "vme=%px", vme);
 
 	path = (struct gb_vme_path){
-		.gb_vme_pgd_index = GB_VME_UNSPEC_INDEX,
-		.gb_vme_pud_index = GB_VME_UNSPEC_INDEX,
-		.gb_vme_pmd_index = GB_VME_UNSPEC_INDEX,
-		.gb_vme_pte_index = GB_VME_UNSPEC_INDEX,
+		.l4 = GB_VME_UNSPEC_INDEX,
+		.l3 = GB_VME_UNSPEC_INDEX,
+		.l2 = GB_VME_UNSPEC_INDEX,
+		.l1 = GB_VME_UNSPEC_INDEX,
 	};
-	KUNIT_ASSERT_TRUE(test, gb_vme_validate_path(path));
+	KUNIT_ASSERT_TRUE(test, _gb_vme_validate_path(path));
 	t0 = pgd_val(ctx->pgd_base[0]);
 	t1 = pgd_val(ctx->pgd_base[1]);
 	t2 = pgd_val(ctx->pgd_base[2]);
@@ -178,7 +178,7 @@ static void gb_test_vme_fill__pgd_table(struct kunit *test)
 	KUNIT_ASSERT_NE(test, t1, 0);
 	KUNIT_ASSERT_EQ(test, t2, 0);
 
-	res = gb_vme_fill(vme, mm, path);
+	res = _gb_vme_fill(vme, mm, path);
 	KUNIT_ASSERT_EQ(test, res, 0);
 	KUNIT_ASSERT_EQ(test, vme->entries[0].value, t0);
 	KUNIT_ASSERT_EQ(test, vme->entries[1].value, t1);
@@ -200,12 +200,12 @@ static void gb_test_vme_fill__pud_table(struct kunit *test)
 
 	/* Explore PUD1 at PGD[1] */
 	path = (struct gb_vme_path){
-		.gb_vme_pgd_index = 1,
-		.gb_vme_pud_index = GB_VME_UNSPEC_INDEX,
-		.gb_vme_pmd_index = GB_VME_UNSPEC_INDEX,
-		.gb_vme_pte_index = GB_VME_UNSPEC_INDEX,
+		.l4 = 1,
+		.l3 = GB_VME_UNSPEC_INDEX,
+		.l2 = GB_VME_UNSPEC_INDEX,
+		.l1 = GB_VME_UNSPEC_INDEX,
 	};
-	KUNIT_ASSERT_TRUE(test, gb_vme_validate_path(path));
+	KUNIT_ASSERT_TRUE(test, _gb_vme_validate_path(path));
 	t0 = pud_val(ctx->pud1_base[0]);
 	t1 = pud_val(ctx->pud1_base[1]);
 	t2 = pud_val(ctx->pud1_base[2]);
@@ -216,7 +216,7 @@ static void gb_test_vme_fill__pud_table(struct kunit *test)
 	KUNIT_ASSERT_EQ(test, t1, 0);
 	KUNIT_ASSERT_EQ(test, t2, 0);
 
-	res = gb_vme_fill(vme, mm, path);
+	res = _gb_vme_fill(vme, mm, path);
 	KUNIT_ASSERT_EQ(test, res, 0);
 
 	KUNIT_ASSERT_EQ(test, vme->entries[0].value, t0);
@@ -242,12 +242,12 @@ static void gb_test_vme_fill__pmd_table(struct kunit *test)
 
 	/* Explore PMD00 at PGD[0][0] */
 	path = (struct gb_vme_path){
-		.gb_vme_pgd_index = 0,
-		.gb_vme_pud_index = 0,
-		.gb_vme_pmd_index = GB_VME_UNSPEC_INDEX,
-		.gb_vme_pte_index = GB_VME_UNSPEC_INDEX,
+		.l4 = 0,
+		.l3 = 0,
+		.l2 = GB_VME_UNSPEC_INDEX,
+		.l1 = GB_VME_UNSPEC_INDEX,
 	};
-	KUNIT_ASSERT_TRUE(test, gb_vme_validate_path(path));
+	KUNIT_ASSERT_TRUE(test, _gb_vme_validate_path(path));
 	t0 = pmd_val(ctx->pmd00_base[0]);
 	t1 = pmd_val(ctx->pmd00_base[1]);
 	t2 = pmd_val(ctx->pmd00_base[2]);
@@ -258,7 +258,7 @@ static void gb_test_vme_fill__pmd_table(struct kunit *test)
 	KUNIT_ASSERT_EQ(test, t1, 0);
 	KUNIT_ASSERT_NE(test, t2, 0);
 
-	res = gb_vme_fill(vme, mm, path);
+	res = _gb_vme_fill(vme, mm, path);
 	KUNIT_ASSERT_EQ(test, res, 0);
 	KUNIT_ASSERT_EQ(test, vme->entries[0].value, t0);
 	KUNIT_ASSERT_EQ(test, vme->entries[1].value, t1);
@@ -283,12 +283,12 @@ static void gb_test_vme_fill__pte_table(struct kunit *test)
 
 	/* Explore PTE000 at PGD[0][0][0] */
 	path = (struct gb_vme_path){
-		.gb_vme_pgd_index = 0,
-		.gb_vme_pud_index = 0,
-		.gb_vme_pmd_index = 0,
-		.gb_vme_pte_index = GB_VME_UNSPEC_INDEX,
+		.l4 = 0,
+		.l3 = 0,
+		.l2 = 0,
+		.l1 = GB_VME_UNSPEC_INDEX,
 	};
-	KUNIT_ASSERT_TRUE(test, gb_vme_validate_path(path));
+	KUNIT_ASSERT_TRUE(test, _gb_vme_validate_path(path));
 	t0 = pte_val(ctx->pte000_base[0]);
 	t1 = pte_val(ctx->pte000_base[1]);
 	t2 = pte_val(ctx->pte000_base[2]);
@@ -299,7 +299,7 @@ static void gb_test_vme_fill__pte_table(struct kunit *test)
 	KUNIT_ASSERT_NE(test, t1, 0);
 	KUNIT_ASSERT_EQ(test, t2, 0);
 
-	res = gb_vme_fill(vme, mm, path);
+	res = _gb_vme_fill(vme, mm, path);
 	KUNIT_ASSERT_EQ(test, res, 0);
 	KUNIT_ASSERT_EQ(test, vme->entries[0].value, t0);
 	KUNIT_ASSERT_EQ(test, vme->entries[1].value, t1);

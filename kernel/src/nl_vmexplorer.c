@@ -30,10 +30,10 @@ static bool gb_nl_vme_populate_args(struct nlattr **attrs,
 		return false;
 	}
 
-	path->gb_vme_pgd_index = nla_get_s32(attrs[GB_NL_ATTR_VME_PGD_INDEX]);
-	path->gb_vme_pud_index = nla_get_s32(attrs[GB_NL_ATTR_VME_PUD_INDEX]);
-	path->gb_vme_pmd_index = nla_get_s32(attrs[GB_NL_ATTR_VME_PMD_INDEX]);
-	path->gb_vme_pte_index = nla_get_s32(attrs[GB_NL_ATTR_VME_PTE_INDEX]);
+	path->l4 = nla_get_s32(attrs[GB_NL_ATTR_VME_PGD_INDEX]);
+	path->l3 = nla_get_s32(attrs[GB_NL_ATTR_VME_PUD_INDEX]);
+	path->l2 = nla_get_s32(attrs[GB_NL_ATTR_VME_PMD_INDEX]);
+	path->l1 = nla_get_s32(attrs[GB_NL_ATTR_VME_PTE_INDEX]);
 	key->pid = nla_get_u32(attrs[GB_NL_ATTR_VME_PID]);
 	key->start_time = nla_get_u64(attrs[GB_NL_ATTR_VME_START_TIME]);
 
@@ -91,10 +91,9 @@ int gb_nl_vme_dump_start(struct netlink_callback *cb)
 	}
 	BUG_ON(!vme);
 
-	pr_info("%s: Dumping VME for task (%d, %llu), path PGD[%d]->PUD[%d]->PMD[%d]->PTE[%d]\n",
-		__func__, key.pid, key.start_time, path.gb_vme_pgd_index,
-		path.gb_vme_pud_index, path.gb_vme_pmd_index,
-		path.gb_vme_pte_index);
+	pr_info("%s: Dumping VME for task (%d, %llu), path L4[%d]->L3[%d]->L2[%d]->L1[%d]\n",
+		__func__, key.pid, key.start_time, path.l4, path.l3, path.l2,
+		path.l1);
 
 	for (i = 0; i < GB_VME_NUM_ENTRIES; i++) {
 		struct gb_vme_entry *entry = &vme->entries[i];
