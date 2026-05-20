@@ -1,15 +1,15 @@
-#include "asm/pgtable_64_types.h"
-#include "asm/pgtable_types.h"
 #include "gb_helper.h"
 #include "gb_vmexplorer.h"
-#include "linux/pfn.h"
-#include "linux/pgtable.h"
+#include "linux/kconfig.h"
+#include <asm/pgtable_64_types.h>
+#include <asm/pgtable_types.h>
+#include <linux/pfn.h>
+#include <linux/pgtable.h>
 #include <asm/pgtable.h>
 #include <linux/sched.h>
 #include <linux/sched/mm.h>
 #include <linux/sched/task.h>
 #include <linux/slab.h>
-#include <kunit/visibility.h>
 
 /* 
 Possible flags for page table entries from linux source code:
@@ -28,6 +28,11 @@ int gb_vme_sanity_check(void)
 #ifndef CONFIG_TRANSPARENT_HUGEPAGE
 #error "THP must be enabled for go tests to work"
 #endif
+
+	// if (IS_ENABLED(CONFIG_PGTABLE_HAS_HUGE_LEAVES)) {
+	// 	pr_err("%s: Huge page support is not supported\n", __func__);
+	// 	return -ENOTSUPP;
+	// }
 
 	/* Make sure the current architecture has 512 entries on each level */
 	BUILD_BUG_ON(GB_VME_NUM_ENTRIES != PTRS_PER_PTE);
@@ -269,6 +274,8 @@ static int __gb_vme_fill(struct gb_vme *vme, pgd_t *pgd,
 	TODO: Has potential locking issues. Research: pte_lockptr, pmd_lockptr, pud_lockptr.
 	https://elixir.bootlin.com/linux/v6.12.74/source/include/linux/mm.h#L3183
 	https://lwn.net/Articles/568076/
+	Also research folio_walk_start() for locking mechanisms.
+	https://elixir.bootlin.com/linux/v6.12.74/source/mm/pagewalk.c#L715
 	TODO: Add swapped out entry support.
 	*/
 
@@ -336,7 +343,7 @@ static int _gb_vme_fill(struct gb_vme *vme, struct mm_struct *mm,
 	return res;
 }
 
-VISIBLE_IF_KUNIT bool _gb_vme_validate_path(struct gb_vme_path path)
+static bool _gb_vme_validate_path(struct gb_vme_path path)
 {
 	/* PGD -> PUD -> PMD -> PTE */
 	if (path.l4 == GB_VME_UNSPEC_INDEX) {

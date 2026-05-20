@@ -52,7 +52,6 @@ struct gb_vme_path {
 };
 
 int gb_vme_sanity_check(void);
-VISIBLE_IF_KUNIT bool _gb_vme_validate_path(struct gb_vme_path path);
 struct gb_vme *gb_vme_get(struct gb_task_key key, struct gb_vme_path path);
 void gb_vme_free(struct gb_vme *vme);
 
