@@ -1,3 +1,4 @@
+#include "gb_schedhook.h"
 #include "gb_netlink.h"
 #include "gb_vmexplorer.h"
 #include <linux/module.h>
@@ -14,12 +15,24 @@ static int __init gb_init(void)
 	if ((ret = gb_vme_sanity_check()))
 		return ret;
 
-	return gb_netlink_init();
+	if ((ret = gb_schedhook_init()))
+		return ret;
+
+	if ((ret = gb_netlink_init()))
+		goto netlink_fail;
+
+	return 0;
+
+netlink_fail:
+	gb_schedhook_exit();
+	return ret;
 }
 
 static void __exit gb_exit(void)
 {
+	/* Remove netlink first to prevent new requests */
 	gb_netlink_exit();
+	gb_schedhook_exit();
 }
 
 module_init(gb_init);

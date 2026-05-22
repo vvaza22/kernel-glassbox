@@ -12,6 +12,7 @@ glassbox-y := \
 	src/proctree.o \
 	src/taskview.o \
 	src/vmexplorer.o \
+	src/schedhook.o \
 	src/nl_proctree.o \
 	src/nl_taskview.o \
 	src/nl_vmexplorer.o
