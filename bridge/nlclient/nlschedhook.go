@@ -12,11 +12,13 @@ import (
 )
 
 var (
-	ErrSchedhookCapBusy = errors.New("schedhook cap is busy")
+	ErrSchedhookBusy       = errors.New("schedhook cap is busy")
+	ErrSchedhookNotStarted = errors.New("schedhook cap has not been started")
 )
 
 type SchedhookClient interface {
-	Cap() (*model.SchedCap, error)
+	CapStart() error
+	CapEnd() (*model.SchedCap, error)
 }
 
 type schedhookClient struct {
@@ -31,20 +33,39 @@ func NewSchedhookClient(ctx *model.NetlinkCtx) SchedhookClient {
 	}
 }
 
-func (s *schedhookClient) Cap() (*model.SchedCap, error) {
+func (s *schedhookClient) CapStart() error {
+	req := genetlink.Message{
+		Header: genetlink.Header{
+			Command: model.CmdSchedhookCapStart,
+			Version: s.family.Version,
+		},
+	}
+
+	_, err := s.conn.Execute(req, s.family.ID, netlink.Request)
+	if err != nil {
+		if errors.Is(err, syscall.EBUSY) {
+			return ErrSchedhookBusy
+		}
+		return err
+	}
+
+	return nil
+}
+
+func (s *schedhookClient) CapEnd() (*model.SchedCap, error) {
 	var events []model.SchedSwitchData
 
 	req := genetlink.Message{
 		Header: genetlink.Header{
-			Command: model.CmdSchedhookCap,
+			Command: model.CmdSchedhookCapEnd,
 			Version: s.family.Version,
 		},
 	}
 
 	msgs, err := s.conn.Execute(req, s.family.ID, netlink.Request|netlink.Dump)
 	if err != nil {
-		if errors.Is(err, syscall.EBUSY) {
-			return nil, ErrSchedhookCapBusy
+		if errors.Is(err, syscall.EPERM) {
+			return nil, ErrSchedhookNotStarted
 		}
 		return nil, err
 	}
@@ -75,7 +96,7 @@ func (s *schedhookClient) decode(msg genetlink.Message) ([]model.SchedSwitchData
 	}
 
 	for decoder.Next() {
-		if decoder.Type() == model.AttrSchedhookData {
+		if decoder.Type() == model.AttrSchedhookEvent {
 			parser := utils.NewByteParser(decoder.Bytes())
 			data, err := model.ReadSchedSwitchData(parser)
 			if err != nil {

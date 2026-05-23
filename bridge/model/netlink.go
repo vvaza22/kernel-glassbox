@@ -17,7 +17,8 @@ const (
 	CmdVMExplorerDump
 
 	// Schedhook
-	CmdSchedhookCap
+	CmdSchedhookCapStart
+	CmdSchedhookCapEnd
 )
 
 const (
@@ -41,11 +42,7 @@ const (
 	AttrVMExplorerEntry
 
 	// Schedhook
-	AttrSchedhookData
-	AttrSchedhookTimeLeft
-	AttrSchedhookTotalCPUs
-	AttrSchedhookDoneCPUs
-	AttrSchedhookNumSwitches
+	AttrSchedhookEvent
 )
 
 type NetlinkCtx struct {

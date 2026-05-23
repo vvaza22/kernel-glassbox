@@ -21,8 +21,5 @@ func ReadSchedSwitchData(parser utils.ByteParser) (SchedSwitchData, error) {
 }
 
 type SchedCap struct {
-	Data      []SchedSwitchData
-	TotalCpus int32
-	DoneCpus  int32
-	TimeLeft  int32
+	Data []SchedSwitchData
 }
