@@ -11,6 +11,7 @@ type NetlinkClient interface {
 	Proctree() ProctreeClient
 	Taskview() TaskviewClient
 	VMExplorer() VMExplorerClient
+	Schedhook() SchedhookClient
 	Destroy() error
 }
 
@@ -20,6 +21,7 @@ type netlinkClient struct {
 	proctreeClient   ProctreeClient
 	taskviewClient   TaskviewClient
 	vmexplorerClient VMExplorerClient
+	schedhookClient  SchedhookClient
 }
 
 func NewNetlinkClient() (NetlinkClient, error) {
@@ -54,6 +56,11 @@ func NewNetlinkClient() (NetlinkClient, error) {
 		Family: family,
 	})
 
+	nlClient.schedhookClient = NewSchedhookClient(&model.NetlinkCtx{
+		Conn:   conn,
+		Family: family,
+	})
+
 	return nlClient, nil
 }
 
@@ -67,6 +74,10 @@ func (c *netlinkClient) Taskview() TaskviewClient {
 
 func (c *netlinkClient) VMExplorer() VMExplorerClient {
 	return c.vmexplorerClient
+}
+
+func (c *netlinkClient) Schedhook() SchedhookClient {
+	return c.schedhookClient
 }
 
 func (c *netlinkClient) Destroy() error {
