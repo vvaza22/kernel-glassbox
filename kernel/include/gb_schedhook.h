@@ -15,14 +15,14 @@
 
 #define GB_SCHEDHOOK_TIMEOUT_MS 300
 
-struct gb_schedhook_result {
+struct gb_schedhook_cap {
 	struct gb_schedhook_data_switch *data;
 	int num_switches;
 	int total_cpus;
 	int done_cpus;
 	int time_left;
 };
-void gb_schedhook_result_free(struct gb_schedhook_result *result);
+void gb_schedhook_cap_free(struct gb_schedhook_cap *result);
 
 struct gb_schedhook_data_switch {
 	struct gb_task_key prev_task;
@@ -40,7 +40,7 @@ struct gb_schedhook_data_per_cpu {
 
 int gb_schedhook_init(void);
 int gb_schedhook_cap_start(void);
-struct gb_schedhook_result *gb_schedhook_cap_wait(void);
+struct gb_schedhook_cap *gb_schedhook_cap_wait(void);
 void gb_schedhook_cap_finish(void);
 void gb_schedhook_exit(void);
 

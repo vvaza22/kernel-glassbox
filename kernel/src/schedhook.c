@@ -155,9 +155,9 @@ int gb_schedhook_cap_start(void)
 	return 0;
 }
 
-static struct gb_schedhook_result *_gb_schedhook_get_result(int time_left)
+static struct gb_schedhook_cap *_gb_schedhook_get_result(int time_left)
 {
-	struct gb_schedhook_result *result;
+	struct gb_schedhook_cap *result;
 	int cpu;
 	int idx;
 	int max_sz;
@@ -217,7 +217,7 @@ save_idx_and_ret:
 	return result;
 }
 
-void gb_schedhook_result_free(struct gb_schedhook_result *result)
+void gb_schedhook_cap_free(struct gb_schedhook_cap *result)
 {
 	if (!result)
 		return;
@@ -226,7 +226,7 @@ void gb_schedhook_result_free(struct gb_schedhook_result *result)
 	kfree(result);
 }
 
-struct gb_schedhook_result *gb_schedhook_cap_wait(void)
+struct gb_schedhook_cap *gb_schedhook_cap_wait(void)
 {
 	int orig;
 	int time_left;
