@@ -34,7 +34,11 @@ static const struct genl_ops gb_genl_ops[] = {
 		.maxattr = GB_NL_ATTR_MAX,
 	},
 	{
-		.cmd = GB_NL_CMD_SCHEDHOOK_CAP,
+		.cmd = GB_NL_CMD_SCHEDHOOK_CAP_START,
+		.doit = gb_nl_schedhook_cap_start,
+	},
+	{
+		.cmd = GB_NL_CMD_SCHEDHOOK_CAP_END,
 		.start = gb_nl_schedhook_dump_start,
 		.dumpit = gb_nl_schedhook_dump,
 		.done = gb_nl_schedhook_dump_done,

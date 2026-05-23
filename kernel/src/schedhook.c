@@ -1,4 +1,5 @@
 #include "gb_schedhook.h"
+#include <linux/spinlock.h>
 #include <asm-generic/bug.h>
 #include <linux/completion.h>
 #include <linux/err.h>
@@ -12,13 +13,11 @@
 #include <trace/events/sched.h>
 
 /*
- * TRACE_EVENT(sched_switch) https://elixir.bootlin.com/linux/v6.12.74/source/include/trace/events/sched.h#L222
+ * TRACE_EVENT(sched_switch) 
+ * https://elixir.bootlin.com/linux/v6.12.74/source/include/trace/events/sched.h#L222
  */
 static DEFINE_PER_CPU(struct gb_schedhook_data_per_cpu, _gb_schedhook_data);
 static atomic_t _gb_schedhook_state = ATOMIC_INIT(GB_SCHEDHOOK_STATE_WAITING);
-static atomic_t _gb_schedhook_total_cpus = ATOMIC_INIT(0);
-static atomic_t _gb_schedhook_num_cpus_working = ATOMIC_INIT(0);
-static DECLARE_COMPLETION(_gb_schedhook_completion);
 
 static void _gb_schedhook_probe(void *_, bool preemptible,
 				struct task_struct *prev,
@@ -27,70 +26,77 @@ static void _gb_schedhook_probe(void *_, bool preemptible,
 {
 	struct gb_schedhook_data_per_cpu *wrapper =
 		this_cpu_ptr(&_gb_schedhook_data);
-	struct gb_schedhook_data_switch *data;
 	int cpu = smp_processor_id();
+	struct gb_schedhook_event *event;
+	unsigned long flags;
 
 	if (atomic_read(&_gb_schedhook_state) != GB_SCHEDHOOK_STATE_RUNNING) {
 		return;
 	}
 
-	if (!wrapper->allowed) {
-		return;
-	}
+	/* Sources I used to learn about locks:
+	https://www.kernel.org/doc/html/latest/locking/spinlocks.html
+	https://stackoverflow.com/questions/2559602/spin-lock-irqsave-vs-spin-lock-irq#14963815
+	*/
 
-	if (wrapper->index >= GB_SCHEDHOOK_MAX_PER_CPU_SWITCH)
-		return;
+	spin_lock_irqsave(&wrapper->lock, flags);
 
-	data = &wrapper->switches[wrapper->index];
-	data->cpu = cpu;
-	data->timestamp = ktime_get_ns();
-	data->prev_task.pid = READ_ONCE(prev->pid);
-	data->prev_task.start_time = READ_ONCE(prev->start_time);
-	data->next_task.pid = READ_ONCE(next->pid);
-	data->next_task.start_time = READ_ONCE(next->start_time);
+	if (wrapper->num_events >= GB_SCHEDHOOK_MAX_EVENTS_PER_CPU)
+		goto done;
 
-	/* Make sure all writes are complete before updating the index */
-	smp_mb();
-	wrapper->index = wrapper->index + 1;
-	smp_mb();
+	event = &wrapper->events[wrapper->num_events];
+	event->cpu = cpu;
+	event->timestamp = ktime_get_ns();
+	event->prev.pid = READ_ONCE(prev->pid);
+	event->prev.start_time = READ_ONCE(prev->start_time);
+	event->next.pid = READ_ONCE(next->pid);
+	event->next.start_time = READ_ONCE(next->start_time);
+	wrapper->num_events++;
 
-	if (wrapper->index != GB_SCHEDHOOK_MAX_PER_CPU_SWITCH)
-		return;
-
-	if (!atomic_dec_and_test(&_gb_schedhook_num_cpus_working))
-		return;
-
-	if (atomic_cmpxchg(&_gb_schedhook_state, GB_SCHEDHOOK_STATE_RUNNING,
-			   GB_SCHEDHOOK_STATE_DONE) !=
-	    GB_SCHEDHOOK_STATE_RUNNING) {
-		return;
-	}
-
-	complete(&_gb_schedhook_completion);
+done:
+	spin_unlock_irqrestore(&wrapper->lock, flags);
+	return;
 }
 
-static void _gb_schedhook_data_reset(struct gb_schedhook_data_switch *d)
+static void _gb_schedhook_data_reset(struct gb_schedhook_data_per_cpu *d)
 {
-	d->cpu = -1;
-	d->timestamp = 0;
-	d->prev_task.pid = -1;
-	d->prev_task.start_time = 0;
-	d->next_task.pid = -1;
-	d->next_task.start_time = 0;
+	unsigned long flags;
+	int i;
+
+	spin_lock_irqsave(&d->lock, flags);
+	d->num_events = 0;
+
+	for (i = 0; i < GB_SCHEDHOOK_MAX_EVENTS_PER_CPU; i++) {
+		d->events[i].cpu = -1;
+		d->events[i].timestamp = -1;
+		d->events[i].prev.pid = -1;
+		d->events[i].prev.start_time = -1;
+		d->events[i].next.pid = -1;
+		d->events[i].next.start_time = -1;
+	}
+
+	spin_unlock_irqrestore(&d->lock, flags);
 }
 
 int gb_schedhook_init(void)
 {
 	int ret;
+	int cpu;
+
+	for_each_possible_cpu(cpu) {
+		struct gb_schedhook_data_per_cpu *d =
+			per_cpu_ptr(&_gb_schedhook_data, cpu);
+		spin_lock_init(&d->lock);
+		_gb_schedhook_data_reset(d);
+	}
 
 	ret = register_trace_sched_switch(_gb_schedhook_probe, NULL);
 	if (ret) {
-		pr_err("Failed to register sched_switch tracepoint: %d\n", ret);
-		return ret;
+		pr_err("%s: Failed to register sched_switch tracepoint: %d\n",
+		       __func__, ret);
 	}
-	init_completion(&_gb_schedhook_completion);
 
-	return 0;
+	return ret;
 }
 
 /*
@@ -114,35 +120,11 @@ int gb_schedhook_cap_start(void)
 		return -EBUSY;
 	}
 
-	reinit_completion(&_gb_schedhook_completion);
-
-	/* Make sure the number of online CPUs stays the same inside the critical section */
-	cpus_read_lock();
-
-	atomic_set(&_gb_schedhook_num_cpus_working, num_online_cpus());
-	atomic_set(&_gb_schedhook_total_cpus, num_online_cpus());
-
 	for_each_possible_cpu(cpu) {
 		struct gb_schedhook_data_per_cpu *d =
 			per_cpu_ptr(&_gb_schedhook_data, cpu);
-		d->index = 0;
-		d->allowed = false;
-
-		for (int i = 0; i < GB_SCHEDHOOK_MAX_PER_CPU_SWITCH; i++) {
-			_gb_schedhook_data_reset(&d->switches[i]);
-		}
+		_gb_schedhook_data_reset(d);
 	}
-
-	for_each_online_cpu(cpu) {
-		struct gb_schedhook_data_per_cpu *d =
-			per_cpu_ptr(&_gb_schedhook_data, cpu);
-		d->allowed = true;
-	}
-
-	cpus_read_unlock();
-
-	/* Defensive: Ensure all writes are complete */
-	smp_mb();
 
 	/* Only tell the probe to start capturing AFTER everything else is setup */
 	orig = atomic_cmpxchg(&_gb_schedhook_state,
@@ -155,108 +137,103 @@ int gb_schedhook_cap_start(void)
 	return 0;
 }
 
-static struct gb_schedhook_cap *_gb_schedhook_get_result(int time_left)
+static bool _gb_schedhook_fill_cpu_data(struct gb_schedhook_cap *cap,
+					struct gb_schedhook_data_per_cpu *d)
+{
+	unsigned long flags;
+	int i;
+	bool res = true;
+
+	/*
+	It is possible that after RUNNING->DONE transition,
+	some CPUs are still in the middle of context switch after the state IF cond check.
+	The following line of code, could acquire the lock before them.
+
+	If the other CPU acquires the lock after the following code executes,
+	It will just write new event in the next slot and it won't be included in the snapshot.
+
+	It is also possible that CPU acquires the lock very late, after the state is reset to WAITING.
+	In this case whatever the CPU writes will be erased in the next cap_start() call.
+
+	If CPU acquires the lock extremly late, like in the next RUNNING state.
+	It will write new event at index=0, which will be included in the next snapshot.
+	*/
+	spin_lock_irqsave(&d->lock, flags);
+
+	for (i = 0; i < d->num_events; i++) {
+		if (cap->cnt == GB_SCHEDHOOK_MAX_EVENTS) {
+			res = false;
+			goto done;
+		}
+		cap->events[cap->cnt++] = d->events[i];
+	}
+
+done:
+	spin_unlock_irqrestore(&d->lock, flags);
+	return res;
+}
+
+static struct gb_schedhook_cap *_gb_schedhook_get_result(void)
 {
 	struct gb_schedhook_cap *result;
 	int cpu;
-	int idx;
-	int max_sz;
-
-	if (WARN_ON(atomic_read(&_gb_schedhook_state) !=
-		    GB_SCHEDHOOK_STATE_DONE)) {
-		return ERR_PTR(-EINVAL);
-	}
 
 	result = kzalloc(sizeof(*result), GFP_KERNEL);
 	if (!result) {
 		return ERR_PTR(-ENOMEM);
 	}
 
-	result->total_cpus = atomic_read(&_gb_schedhook_total_cpus);
-	result->done_cpus = 0;
-	result->time_left = time_left;
-
-	/* Allocate maximum possible array */
-	max_sz = result->total_cpus * GB_SCHEDHOOK_MAX_PER_CPU_SWITCH;
-	result->data = kcalloc(max_sz, sizeof(struct gb_schedhook_data_switch),
-			       GFP_KERNEL);
-	if (!result->data) {
+	result->events = kcalloc(GB_SCHEDHOOK_MAX_EVENTS,
+				 sizeof(struct gb_schedhook_event), GFP_KERNEL);
+	if (!result->events) {
 		kfree(result);
 		return ERR_PTR(-ENOMEM);
 	}
 
 	/* It is possible that some CPUs that finished the task, are no longer active */
-	idx = 0;
 	for_each_possible_cpu(cpu) {
-		int i;
-		int num_switches;
 		struct gb_schedhook_data_per_cpu *d =
 			per_cpu_ptr(&_gb_schedhook_data, cpu);
-
-		/* 
-		 * d->index might increase after this, but I don't care.
-		 * I know that i'th entry for i < num_switches are complete.
-		 */
-		num_switches = d->index;
-		if (num_switches == 0)
-			continue;
-
-		result->done_cpus++;
-
-		for (i = 0; i < num_switches; i++) {
-			if (WARN_ON(idx == max_sz)) {
-				// Defensive: truncate the result, but should not happen
-				goto save_idx_and_ret;
-			}
-			result->data[idx++] = d->switches[i];
+		if (!_gb_schedhook_fill_cpu_data(result, d)) {
+			break;
 		}
 	}
 
-save_idx_and_ret:
-	result->num_switches = idx;
 	return result;
 }
 
-void gb_schedhook_cap_free(struct gb_schedhook_cap *result)
+void gb_schedhook_cap_free(struct gb_schedhook_cap *cap)
 {
-	if (!result)
+	if (!cap)
 		return;
 
-	kfree(result->data);
-	kfree(result);
+	kfree(cap->events);
+	kfree(cap);
 }
 
-struct gb_schedhook_cap *gb_schedhook_cap_wait(void)
+/*
+ * Caller should wait for some amount of time for the buffer to fill up and
+ * then call this function.
+ */
+struct gb_schedhook_cap *gb_schedhook_cap_end(void)
 {
+	struct gb_schedhook_cap *result;
 	int orig;
-	int time_left;
 
-	time_left = wait_for_completion_timeout(
-		&_gb_schedhook_completion,
-		msecs_to_jiffies(GB_SCHEDHOOK_TIMEOUT_MS));
-
-	/* Manually trigger: RUNNING -> DONE */
 	orig = atomic_cmpxchg(&_gb_schedhook_state, GB_SCHEDHOOK_STATE_RUNNING,
 			      GB_SCHEDHOOK_STATE_DONE);
 
-	/*
-	 * Case 1: Task was finished on time, no change in state DONE -> DONE
-	 * Case 2: Deadline was hit, forcefully change RUNNING -> DONE
-	 */
-	if (WARN_ON(orig != GB_SCHEDHOOK_STATE_RUNNING &&
-		    orig != GB_SCHEDHOOK_STATE_DONE)) {
-		return ERR_PTR(-EINVAL);
+	if (orig != GB_SCHEDHOOK_STATE_RUNNING) {
+		return ERR_PTR(-EPERM);
 	}
 
-	return _gb_schedhook_get_result(time_left);
-}
+	result = _gb_schedhook_get_result();
 
-void gb_schedhook_cap_finish(void)
-{
-	int orig;
 	orig = atomic_cmpxchg(&_gb_schedhook_state, GB_SCHEDHOOK_STATE_DONE,
 			      GB_SCHEDHOOK_STATE_WAITING);
 	WARN_ON(orig != GB_SCHEDHOOK_STATE_DONE);
+
+	return result;
 }
 
 void gb_schedhook_exit(void)

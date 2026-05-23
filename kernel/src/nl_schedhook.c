@@ -6,17 +6,17 @@
 
 static bool _gb_nl_schedhook_put_data(struct sk_buff *skb,
 				      struct netlink_callback *cb,
-				      struct gb_schedhook_data_switch *data)
+				      struct gb_schedhook_event *data)
 {
 	void *hdr;
 
 	hdr = genlmsg_put(skb, NETLINK_CB(cb->skb).portid, cb->nlh->nlmsg_seq,
 			  &gb_genl_family, NLM_F_MULTI,
-			  GB_NL_CMD_SCHEDHOOK_CAP);
+			  GB_NL_CMD_SCHEDHOOK_CAP_END);
 	if (!hdr)
 		return false;
 
-	if (nla_put(skb, GB_NL_ATTR_SCHEDHOOK_DATA, sizeof(*data), data)) {
+	if (nla_put(skb, GB_NL_ATTR_SCHEDHOOK_EVENT, sizeof(*data), data)) {
 		genlmsg_cancel(skb, hdr);
 		return false;
 	}
@@ -26,63 +26,62 @@ static bool _gb_nl_schedhook_put_data(struct sk_buff *skb,
 	return true;
 }
 
-// static bool _gb_nl_schedhook_put_hdr(struct sk_buff *skb,
-// 				     struct netlink_callback *cb,
-// 				     struct gb_schedhook_cap *cap)
-// {
-// 	void *hdr;
+static int _gb_nl_schedhook_reply(struct genl_info *info)
+{
+	struct sk_buff *skb;
+	void *hdr;
 
-// 	hdr = genlmsg_put(skb, NETLINK_CB(cb->skb).portid, cb->nlh->nlmsg_seq,
-// 			  &gb_genl_family, NLM_F_MULTI,
-// 			  GB_NL_CMD_SCHEDHOOK_CAP);
-// 	if (!hdr)
-// 		return false;
+	skb = genlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
+	if (!skb) {
+		pr_err("%s: Failed to allocate skb\n", __func__);
+		return -ENOMEM;
+	}
 
-// 	if (nla_put_u32(skb, GB_NL_ATTR_SCHEDHOOK_TIME_LEFT, cap->time_left) ||
-// 	    nla_put_u32(skb, GB_NL_ATTR_SCHEDHOOK_TOTAL_CPUS,
-// 			cap->total_cpus) ||
-// 	    nla_put_u32(skb, GB_NL_ATTR_SCHEDHOOK_DONE_CPUS, cap->done_cpus) ||
-// 	    nla_put_u32(skb, GB_NL_ATTR_SCHEDHOOK_NUM_SWITCHES,
-// 			cap->num_switches)) {
-// 		genlmsg_cancel(skb, hdr);
-// 		return false;
-// 	}
+	hdr = genlmsg_put_reply(skb, info, &gb_genl_family, 0,
+				GB_NL_CMD_SCHEDHOOK_CAP_END);
+	if (!hdr) {
+		pr_err("%s: Failed to add genl header\n", __func__);
+		nlmsg_free(skb);
+		return -EMSGSIZE;
+	}
 
-// 	genlmsg_end(skb, hdr);
+	genlmsg_end(skb, hdr);
+	return genlmsg_reply(skb, info);
+}
 
-// 	return true;
-// }
+int gb_nl_schedhook_cap_start(struct sk_buff *skb, struct genl_info *info)
+{
+	int res;
+
+	res = gb_schedhook_cap_start();
+	if (res) {
+		pr_err("%s: CAP_START Failed: %d\n", __func__, res);
+		return res;
+	}
+	pr_info("%s: CAP_START OK\n", __func__);
+
+	return _gb_nl_schedhook_reply(info);
+}
 
 int gb_nl_schedhook_dump_start(struct netlink_callback *cb)
 {
 	struct gb_nl_schedhook_cap_ctx *ctx;
 	struct gb_schedhook_cap *cap;
-	int ret;
 
 	NL_ASSERT_DUMP_CTX_FITS(struct gb_nl_schedhook_cap_ctx);
 	ctx = (struct gb_nl_schedhook_cap_ctx *)cb->ctx;
 	ctx->index = 0;
 	ctx->cap = NULL;
-	ctx->hdr_sent = false;
 
-	ret = gb_schedhook_cap_start();
-	if (ret) {
-		pr_err("%s: Failed to start cap: %d\n", __func__, ret);
-		return ret;
-	}
-	pr_info("%s: CAP Start OK\n", __func__);
+	pr_info("%s: CAP_END called\n", __func__);
 
-	cap = gb_schedhook_cap_wait();
+	cap = gb_schedhook_cap_end();
 	if (IS_ERR(cap)) {
-		ret = PTR_ERR(cap);
-		pr_err("%s: Failed to get cap: %d\n", __func__, ret);
-		return ret;
+		pr_err("%s: CAP_END Failed: %ld\n", __func__, PTR_ERR(cap));
+		return PTR_ERR(cap);
 	}
-	pr_info("%s: CAP Wait OK\n", __func__);
-	pr_info("%s: time_left=%d\n", __func__, cap->time_left);
-	pr_info("%s: total_cpus=%d\n", __func__, cap->total_cpus);
-	pr_info("%s: done_cpus=%d\n", __func__, cap->done_cpus);
-	pr_info("%s: num_switches=%d\n", __func__, cap->num_switches);
+
+	pr_info("%s: CAP_END OK\n", __func__);
 	ctx->cap = cap;
 
 	return 0;
@@ -98,8 +97,9 @@ int gb_nl_schedhook_dump(struct sk_buff *skb, struct netlink_callback *cb)
 	if (!cap)
 		return 0;
 
-	while (ctx->index < cap->num_switches) {
-		if (!_gb_nl_schedhook_put_data(skb, cb, &cap->data[ctx->index]))
+	while (ctx->index < cap->cnt) {
+		if (!_gb_nl_schedhook_put_data(skb, cb,
+					       &cap->events[ctx->index]))
 			break;
 		ctx->index++;
 	}
@@ -116,9 +116,6 @@ int gb_nl_schedhook_dump_done(struct netlink_callback *cb)
 		(struct gb_nl_schedhook_cap_ctx *)cb->ctx;
 
 	gb_schedhook_cap_free(ctx->cap);
-
-	/* Allow new captures */
-	gb_schedhook_cap_finish();
 	pr_info("%s: CAP Finish OK\n", __func__);
 
 	return 0;
