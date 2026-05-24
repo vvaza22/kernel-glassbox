@@ -1,4 +1,5 @@
 #include "gb_schedhook.h"
+#include "linux/string.h"
 #include <linux/spinlock.h>
 #include <asm-generic/bug.h>
 #include <linux/completion.h>
@@ -45,12 +46,18 @@ static void _gb_schedhook_probe(void *_, bool preemptible,
 		goto done;
 
 	event = &wrapper->events[wrapper->num_events];
-	event->cpu = cpu;
-	event->timestamp = ktime_get_ns();
 	event->prev.pid = READ_ONCE(prev->pid);
 	event->prev.start_time = READ_ONCE(prev->start_time);
 	event->next.pid = READ_ONCE(next->pid);
 	event->next.start_time = READ_ONCE(next->start_time);
+	/* 
+	Theoretical risk: Other CPU can call set_task_comm() in this moment and
+	this will yield torn/intermediate comm, but that's ok for now.
+	*/
+	strscpy_pad(event->comm_prev, prev->comm, TASK_COMM_LEN);
+	strscpy_pad(event->comm_next, next->comm, TASK_COMM_LEN);
+	event->timestamp = ktime_get_ns();
+	event->cpu = cpu;
 	wrapper->num_events++;
 
 done:

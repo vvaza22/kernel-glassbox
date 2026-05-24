@@ -24,6 +24,8 @@ struct gb_schedhook_cap {
 struct gb_schedhook_event {
 	struct gb_task_key prev;
 	struct gb_task_key next;
+	char comm_prev[TASK_COMM_LEN];
+	char comm_next[TASK_COMM_LEN];
 	u64 timestamp;
 	int cpu;
 };
