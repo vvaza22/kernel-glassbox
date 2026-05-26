@@ -1,4 +1,5 @@
-import type { ProctreeNode, TaskKey } from "@/types/ws/proctree";
+import type { ProctreeNode } from "@/types/ws/proctree";
+import type { TaskKey } from "@/types/ws/shared";
 import type {
   SubTreeNode,
   TreeNode,
