@@ -1,15 +1,15 @@
 import { useEffect } from "react";
 import { useWSStore } from "@/stores/ws";
 import { debug } from "@/helpers/logger";
-import Proctree from "@/features/Proctree.tsx";
 import { Route, Switch } from "wouter";
+import Proctree from "@/features/Proctree.tsx";
+import Schedhook from "./features/Schedhook";
 
 /* Localisation */
 import "@/localisation/i18n";
 
 /* Tailwind + shadcn UI styles */
 import "@/shadcn/styles/app.css";
-import Schedhook from "./features/Schedhook";
 
 export default function App() {
   const connect = useWSStore((s) => s.connect);
