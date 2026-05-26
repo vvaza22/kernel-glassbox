@@ -53,7 +53,7 @@ func (s *schedhookClient) CapStart() error {
 }
 
 func (s *schedhookClient) CapEnd() (*model.SchedCap, error) {
-	var events []model.SchedSwitchData
+	var events []model.SchedEvent
 
 	req := genetlink.Message{
 		Header: genetlink.Header{
@@ -83,12 +83,12 @@ func (s *schedhookClient) CapEnd() (*model.SchedCap, error) {
 	})
 
 	return &model.SchedCap{
-		Data: events,
+		Events: events,
 	}, nil
 }
 
-func (s *schedhookClient) decode(msg genetlink.Message) ([]model.SchedSwitchData, error) {
-	var batch []model.SchedSwitchData
+func (s *schedhookClient) decode(msg genetlink.Message) ([]model.SchedEvent, error) {
+	var batch []model.SchedEvent
 
 	decoder, err := netlink.NewAttributeDecoder(msg.Data)
 	if err != nil {
@@ -98,7 +98,7 @@ func (s *schedhookClient) decode(msg genetlink.Message) ([]model.SchedSwitchData
 	for decoder.Next() {
 		if decoder.Type() == model.AttrSchedhookEvent {
 			parser := utils.NewByteParser(decoder.Bytes())
-			data, err := model.ReadSchedSwitchData(parser)
+			data, err := model.ReadSchedEvent(parser)
 			if err != nil {
 				return nil, err
 			}

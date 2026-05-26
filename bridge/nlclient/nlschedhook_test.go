@@ -56,8 +56,8 @@ func TestSchedhookClient(t *testing.T) {
 		data, err := schedhook.CapEnd()
 		require.NoError(t, err)
 		require.NotNil(t, data)
-		require.NotEmpty(t, data.Data)
-		printEvents(t, data.Data)
+		require.NotEmpty(t, data.Events)
+		printEvents(t, data.Events)
 	})
 
 	t.Run("stress test sequential captures", func(t *testing.T) {
@@ -79,8 +79,8 @@ func TestSchedhookClient(t *testing.T) {
 		data, err := schedhook.CapEnd()
 		require.NoError(t, err)
 		require.NotNil(t, data)
-		require.NotEmpty(t, data.Data)
-		printEvents(t, data.Data)
+		require.NotEmpty(t, data.Events)
+		printEvents(t, data.Events)
 	})
 
 	t.Run("stress test concurrent starts", func(t *testing.T) {
@@ -113,7 +113,7 @@ func TestSchedhookClient(t *testing.T) {
 		data, err := schedhook.CapEnd()
 		require.NoError(t, err)
 		require.NotNil(t, data)
-		printEvents(t, data.Data)
+		printEvents(t, data.Events)
 	})
 
 	t.Run("stress test concurrent ends", func(t *testing.T) {
@@ -198,16 +198,16 @@ func TestSchedhookClient(t *testing.T) {
 		data, err := schedhook.CapEnd()
 		require.NoError(t, err)
 		require.NotNil(t, data)
-		require.NotEmpty(t, data.Data)
-		printEvents(t, data.Data)
+		require.NotEmpty(t, data.Events)
+		printEvents(t, data.Events)
 	})
 }
 
-func printEvents(t *testing.T, events []model.SchedSwitchData) {
+func printEvents(t *testing.T, events []model.SchedEvent) {
 	for _, event := range events {
 		t.Logf("[%d] CPU=%d <%s>%s -> <%s>%s",
 			event.Timestamp,
-			event.Cpu,
+			event.CPU,
 			event.CommPrev,
 			event.Prev,
 			event.CommNext,

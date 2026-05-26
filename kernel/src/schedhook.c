@@ -58,6 +58,9 @@ static void _gb_schedhook_probe(void *_, bool preemptible,
 	strscpy_pad(event->comm_next, next->comm, TASK_COMM_LEN);
 	event->timestamp = ktime_get_ns();
 	event->cpu = cpu;
+	/* KTHREAD check idea: https://elixir.bootlin.com/linux/v6.12.74/source/kernel/kthread.c#L94 */
+	event->prev_is_kthread = prev->flags & PF_KTHREAD;
+	event->next_is_kthread = next->flags & PF_KTHREAD;
 	wrapper->num_events++;
 
 done:
@@ -80,6 +83,8 @@ static void _gb_schedhook_data_reset(struct gb_schedhook_data_per_cpu *d)
 		d->events[i].prev.start_time = -1;
 		d->events[i].next.pid = -1;
 		d->events[i].next.start_time = -1;
+		d->events[i].prev_is_kthread = false;
+		d->events[i].next_is_kthread = false;
 	}
 
 	spin_unlock_irqrestore(&d->lock, flags);

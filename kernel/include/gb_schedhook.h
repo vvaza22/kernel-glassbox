@@ -28,6 +28,8 @@ struct gb_schedhook_event {
 	char comm_next[TASK_COMM_LEN];
 	u64 timestamp;
 	int cpu;
+	bool prev_is_kthread;
+	bool next_is_kthread;
 };
 
 struct gb_schedhook_data_per_cpu {
