@@ -11,8 +11,6 @@ function toSchedTask(cur: SchedEvent, next: SchedEvent): SchedTask {
     end: next.timestamp,
     startNorm: cur.timestamp,
     endNorm: next.timestamp,
-    startLog: cur.timestamp,
-    endLog: next.timestamp,
     duration: next.timestamp - cur.timestamp,
     kthread: cur.nextIsKthread,
   };

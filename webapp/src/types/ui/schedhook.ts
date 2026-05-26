@@ -8,8 +8,6 @@ export type SchedTask = {
   end: bigint;
   startNorm: bigint;
   endNorm: bigint;
-  startLog: bigint;
-  endLog: bigint;
   duration: bigint;
   kthread: boolean;
 };
