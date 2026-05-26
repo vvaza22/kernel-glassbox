@@ -2,12 +2,14 @@ import { useEffect } from "react";
 import { useWSStore } from "@/stores/ws";
 import { debug } from "@/helpers/logger";
 import Proctree from "@/features/Proctree.tsx";
+import { Route, Switch } from "wouter";
 
 /* Localisation */
 import "@/localisation/i18n";
 
 /* Tailwind + shadcn UI styles */
 import "@/shadcn/styles/app.css";
+import Schedhook from "./features/Schedhook";
 
 export default function App() {
   const connect = useWSStore((s) => s.connect);
@@ -24,7 +26,14 @@ export default function App() {
 
   return (
     <div className="h-screen w-screen relative">
-      <Proctree />
+      <Switch>
+        <Route path="/">
+          <Proctree />
+        </Route>
+        <Route path="/schedhook">
+          <Schedhook />
+        </Route>
+      </Switch>
     </div>
   );
 }

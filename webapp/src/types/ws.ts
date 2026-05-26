@@ -2,9 +2,12 @@ export enum WSMsgType {
   // Server => Client messages [1, 1000]
   WSMsgSrvError = 1,
   WSMsgSrvProctreeDump,
+  WSMsgSrvSchedhookCap,
 
   // Client => Server messages [1001, +inf]
   WSMsgClientReqProctreeDump = 1001,
+  WSMSgClientReqSchedhookCapStart,
+  WSMsgClientReqSchedhookCapEnd,
 }
 
 export interface WSMessage {
