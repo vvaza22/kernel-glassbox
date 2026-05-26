@@ -2,7 +2,6 @@ package app
 
 import (
 	"bridge/model"
-	"bridge/nlclient"
 	"bridge/utils"
 	"fmt"
 )
@@ -22,14 +21,22 @@ type handler struct {
 	id string
 	// Ownership of the write channel is transferred to the handler
 	writeCh chan<- model.WSMessage
-	nl      nlclient.NetlinkClient
+
+	proctree  ProctreeManager
+	schedhook SchedhookManager
 }
 
-func NewHandler(ctx *model.WSContext, nl nlclient.NetlinkClient) Handler {
+type HandlerParams struct {
+	Proctree  ProctreeManager
+	Schedhook SchedhookManager
+}
+
+func NewHandler(ctx *model.WSContext, params *HandlerParams) Handler {
 	return &handler{
-		id:      utils.UID(),
-		writeCh: ctx.WriteCh,
-		nl:      nl,
+		id:        utils.UID(),
+		writeCh:   ctx.WriteCh,
+		proctree:  params.Proctree,
+		schedhook: params.Schedhook,
 	}
 }
 
@@ -41,13 +48,38 @@ func (h *handler) OnClientMessage(msg model.WSMessage) {
 	fmt.Printf("Received message from client %s: %v\n", h.id, msg)
 	switch msg.Type {
 	case model.WSMsgClientReqProctreeDump:
-		h.handleProctreeDumpRequest()
+		h.handleProctreeDump()
+	case model.WSMSgClientReqSchedhookCapStart:
+		h.handleCapStart()
+	case model.WSMsgClientReqSchedhookCapEnd:
+		h.handleCapEnd()
+	default:
 	}
 }
 
-func (h *handler) handleProctreeDumpRequest() {
-	proctreeClient := h.nl.Proctree()
-	nodes, err := proctreeClient.Dump()
+func (h *handler) handleCapStart() {
+	err := h.schedhook.Start()
+	if err != nil {
+		// TODO: Send error
+		return
+	}
+}
+
+func (h *handler) handleCapEnd() {
+	cap, err := h.schedhook.End()
+	if err != nil {
+		// TODO: Send error
+		return
+	}
+	respMsg, err := model.NewWSMsg(model.WSMsgSrvSchedhookCap, cap)
+	if err != nil {
+		return
+	}
+	h.sendMessage(respMsg)
+}
+
+func (h *handler) handleProctreeDump() {
+	nodes, err := h.proctree.Dump()
 	if err != nil {
 		// TODO: Log the error and send an error message back to the client
 		return

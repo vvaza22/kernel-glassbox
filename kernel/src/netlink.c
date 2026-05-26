@@ -2,6 +2,7 @@
 #include "gb_nl_proctree.h"
 #include "gb_nl_taskview.h"
 #include "gb_nl_vmexplorer.h"
+#include "gb_nl_schedhook.h"
 #include <linux/netlink.h>
 #include <net/genetlink.h>
 
@@ -32,6 +33,16 @@ static const struct genl_ops gb_genl_ops[] = {
 		.policy = gb_nl_vme_dump_pol,
 		.maxattr = GB_NL_ATTR_MAX,
 	},
+	{
+		.cmd = GB_NL_CMD_SCHEDHOOK_CAP_START,
+		.doit = gb_nl_schedhook_cap_start,
+	},
+	{
+		.cmd = GB_NL_CMD_SCHEDHOOK_CAP_END,
+		.start = gb_nl_schedhook_dump_start,
+		.dumpit = gb_nl_schedhook_dump,
+		.done = gb_nl_schedhook_dump_done,
+	}
 };
 
 struct genl_family gb_genl_family = {

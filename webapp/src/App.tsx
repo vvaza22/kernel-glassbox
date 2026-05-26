@@ -1,7 +1,9 @@
 import { useEffect } from "react";
 import { useWSStore } from "@/stores/ws";
 import { debug } from "@/helpers/logger";
+import { Route, Switch } from "wouter";
 import Proctree from "@/features/Proctree.tsx";
+import Schedhook from "./features/Schedhook";
 
 /* Localisation */
 import "@/localisation/i18n";
@@ -24,7 +26,14 @@ export default function App() {
 
   return (
     <div className="h-screen w-screen relative">
-      <Proctree />
+      <Switch>
+        <Route path="/">
+          <Proctree />
+        </Route>
+        <Route path="/schedhook">
+          <Schedhook />
+        </Route>
+      </Switch>
     </div>
   );
 }

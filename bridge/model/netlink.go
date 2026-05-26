@@ -15,6 +15,10 @@ const (
 
 	// VMExplorer
 	CmdVMExplorerDump
+
+	// Schedhook
+	CmdSchedhookCapStart
+	CmdSchedhookCapEnd
 )
 
 const (
@@ -36,6 +40,9 @@ const (
 	AttrVMExplorerPID
 	AttrVMExplorerStartTime
 	AttrVMExplorerEntry
+
+	// Schedhook
+	AttrSchedhookEvent
 )
 
 type NetlinkCtx struct {

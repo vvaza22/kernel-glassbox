@@ -45,6 +45,8 @@ static void gb_proctree_read_task(struct gb_proctree_node *node,
 	node->self.start_time = task->start_time;
 
 	/* task name */
+
+	/* TODO: This takes task locks, research if safe */
 	get_task_comm(node->name, task);
 }
 

@@ -8,11 +8,14 @@ type WSMsgType uint32
 const (
 	WSMsgSrvError WSMsgType = iota + 1
 	WSMsgSrvProctreeDump
+	WSMsgSrvSchedhookCap
 )
 
 // Client => Server messages [1001, +inf]
 const (
 	WSMsgClientReqProctreeDump WSMsgType = iota + 1001
+	WSMSgClientReqSchedhookCapStart
+	WSMsgClientReqSchedhookCapEnd
 )
 
 func NewWSMsg(msgType WSMsgType, payload any) (WSMessage, error) {

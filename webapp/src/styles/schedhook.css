@@ -1,0 +1,23 @@
+@reference "tailwindcss";
+
+.vis-panel.vis-background.vis-vertical {
+  display: none !important;
+}
+
+.vis-timeline {
+  border: none !important;
+}
+
+.vis-panel.vis-left,
+.vis-panel.vis-center {
+  border: none !important;
+}
+
+.vis-foreground .vis-group,
+.vis-labelset .vis-label {
+  @apply !border-none;
+}
+
+.vis-labelset .vis-inner {
+  @apply !font-mono !text-white;
+}

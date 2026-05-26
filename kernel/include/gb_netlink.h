@@ -24,6 +24,9 @@ enum {
 	GB_NL_ATTR_VME_START_TIME,
 	GB_NL_ATTR_VME_ENTRY,
 
+	/* Schedhook */
+	GB_NL_ATTR_SCHEDHOOK_EVENT,
+
 	__GB_NL_ATTR_MAX,
 };
 #define GB_NL_ATTR_MAX (__GB_NL_ATTR_MAX - 1)
@@ -40,6 +43,10 @@ enum {
 
 	/* VM Explorer */
 	GB_NL_CMD_VME_DUMP,
+
+	/* Schedhook */
+	GB_NL_CMD_SCHEDHOOK_CAP_START,
+	GB_NL_CMD_SCHEDHOOK_CAP_END,
 
 	__GB_NL_CMD_MAX,
 };

@@ -3,6 +3,7 @@ import type { WSMessage, WSMsgType, ListenerFn } from "@/types/ws";
 import { isWSMessage, WSStatus } from "@/types/ws";
 import { WS_URL } from "@/config/config";
 import { debug, error, warn } from "@/helpers/logger";
+import JSONBig from "json-bigint";
 
 type WSStore = {
   socket: WebSocket | null;
@@ -53,7 +54,9 @@ export const useWSStore = create<WSStore>((set, get) => {
         let data: unknown;
 
         try {
-          data = JSON.parse(event.data);
+          data = JSONBig({
+            useNativeBigInt: true,
+          }).parse(event.data);
         } catch (err) {
           error("Failed to parse WS message:", err);
           return;
@@ -104,7 +107,11 @@ export const useWSStore = create<WSStore>((set, get) => {
       debug("Sending WS message:", msg);
 
       if (socket.readyState === WebSocket.OPEN) {
-        socket.send(JSON.stringify(msg));
+        socket.send(
+          JSONBig({
+            useNativeBigInt: true,
+          }).stringify(msg),
+        );
       }
     },
 
