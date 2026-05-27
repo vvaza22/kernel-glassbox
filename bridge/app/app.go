@@ -18,6 +18,7 @@ type app struct {
 	nlClient         nlclient.NetlinkClient
 	proctreeManager  ProctreeManager
 	schedhookManager SchedhookManager
+	vmeManager       VMExplorerManager
 }
 
 func NewApp(nl nlclient.NetlinkClient) App {
@@ -26,6 +27,7 @@ func NewApp(nl nlclient.NetlinkClient) App {
 		nlClient:         nl,
 		proctreeManager:  NewProctreeManager(nl.Proctree()),
 		schedhookManager: NewSchedhookManager(nl.Schedhook()),
+		vmeManager:       NewVMExplorerManager(nl.VMExplorer()),
 	}
 }
 
@@ -36,6 +38,7 @@ func (a *app) AddClient(wsCtx *model.WSContext) ClientMessageListener {
 	handler := NewHandler(wsCtx, &HandlerParams{
 		Proctree:  a.proctreeManager,
 		Schedhook: a.schedhookManager,
+		VME:       a.vmeManager,
 	})
 	a.clients[handler.ID()] = handler
 

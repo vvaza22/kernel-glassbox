@@ -9,7 +9,7 @@ import (
 )
 
 type VMExplorerClient interface {
-	Dump(key model.TaskKey, path model.VMEPath) (*model.VMEDump, error)
+	Dump(key model.TaskKey, path model.VMEPath) (*model.NetlinkVMEDump, error)
 }
 
 type vmexplorerClient struct {
@@ -24,8 +24,8 @@ func NewVMExplorerClient(ctx *model.NetlinkCtx) VMExplorerClient {
 	}
 }
 
-func (vc *vmexplorerClient) Dump(key model.TaskKey, path model.VMEPath) (*model.VMEDump, error) {
-	var entries []model.VMEntry
+func (vc *vmexplorerClient) Dump(key model.TaskKey, path model.VMEPath) (*model.NetlinkVMEDump, error) {
+	var entries []model.NetlinkVMEntry
 
 	payload, err := vc.encode(key, path)
 	if err != nil {
@@ -53,7 +53,7 @@ func (vc *vmexplorerClient) Dump(key model.TaskKey, path model.VMEPath) (*model.
 		entries = append(entries, batch...)
 	}
 
-	return &model.VMEDump{
+	return &model.NetlinkVMEDump{
 		Entries: entries,
 	}, nil
 }
@@ -62,15 +62,15 @@ func (vc *vmexplorerClient) encode(key model.TaskKey, path model.VMEPath) ([]byt
 	encoder := netlink.NewAttributeEncoder()
 	encoder.Uint32(model.AttrVMExplorerPID, key.Pid)
 	encoder.Uint64(model.AttrVMExplorerStartTime, key.StartTime)
-	encoder.Int32(model.AttrVMExplorerPGD, path.PGD)
-	encoder.Int32(model.AttrVMExplorerPUD, path.PUD)
-	encoder.Int32(model.AttrVMExplorerPMD, path.PMD)
-	encoder.Int32(model.AttrVMExplorerPTE, path.PTE)
+	encoder.Int32(model.AttrVMExplorerPGD, path.L4)
+	encoder.Int32(model.AttrVMExplorerPUD, path.L3)
+	encoder.Int32(model.AttrVMExplorerPMD, path.L2)
+	encoder.Int32(model.AttrVMExplorerPTE, path.L1)
 	return encoder.Encode()
 }
 
-func (vc *vmexplorerClient) decode(msg genetlink.Message) ([]model.VMEntry, error) {
-	var entries []model.VMEntry
+func (vc *vmexplorerClient) decode(msg genetlink.Message) ([]model.NetlinkVMEntry, error) {
+	var entries []model.NetlinkVMEntry
 
 	decoder, err := netlink.NewAttributeDecoder(msg.Data)
 	if err != nil {
@@ -80,7 +80,7 @@ func (vc *vmexplorerClient) decode(msg genetlink.Message) ([]model.VMEntry, erro
 	for decoder.Next() {
 		if decoder.Type() == model.AttrVMExplorerEntry {
 			parser := utils.NewByteParser(decoder.Bytes())
-			entry, err := model.ReadVMEntry(parser)
+			entry, err := model.ReadNetlinkVMEntry(parser)
 			if err != nil {
 				return nil, err
 			}

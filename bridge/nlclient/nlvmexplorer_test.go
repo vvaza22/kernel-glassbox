@@ -46,10 +46,10 @@ func TestVMExplorer(t *testing.T) {
 
 		/* PGD Level */
 		dump, err := vme.Dump(key, model.VMEPath{
-			PGD: model.VMExplorerUnspecIndex,
-			PUD: model.VMExplorerUnspecIndex,
-			PMD: model.VMExplorerUnspecIndex,
-			PTE: model.VMExplorerUnspecIndex,
+			L4: model.VMExplorerUnspecIndex,
+			L3: model.VMExplorerUnspecIndex,
+			L2: model.VMExplorerUnspecIndex,
+			L1: model.VMExplorerUnspecIndex,
 		})
 		require.NoError(t, err)
 		require.NotNil(t, dump)
@@ -61,10 +61,10 @@ func TestVMExplorer(t *testing.T) {
 
 		/* PUD Level */
 		dump, err = vme.Dump(key, model.VMEPath{
-			PGD: pgdIdx,
-			PUD: model.VMExplorerUnspecIndex,
-			PMD: model.VMExplorerUnspecIndex,
-			PTE: model.VMExplorerUnspecIndex,
+			L4: pgdIdx,
+			L3: model.VMExplorerUnspecIndex,
+			L2: model.VMExplorerUnspecIndex,
+			L1: model.VMExplorerUnspecIndex,
 		})
 		require.NoError(t, err)
 		require.NotNil(t, dump)
@@ -76,10 +76,10 @@ func TestVMExplorer(t *testing.T) {
 
 		/* PMD Level */
 		dump, err = vme.Dump(key, model.VMEPath{
-			PGD: pgdIdx,
-			PUD: pudIdx,
-			PMD: model.VMExplorerUnspecIndex,
-			PTE: model.VMExplorerUnspecIndex,
+			L4: pgdIdx,
+			L3: pudIdx,
+			L2: model.VMExplorerUnspecIndex,
+			L1: model.VMExplorerUnspecIndex,
 		})
 		require.NoError(t, err)
 		require.NotNil(t, dump)
@@ -91,10 +91,10 @@ func TestVMExplorer(t *testing.T) {
 
 		/* PTE Level */
 		dump, err = vme.Dump(key, model.VMEPath{
-			PGD: pgdIdx,
-			PUD: pudIdx,
-			PMD: pmdIdx,
-			PTE: model.VMExplorerUnspecIndex,
+			L4: pgdIdx,
+			L3: pudIdx,
+			L2: pmdIdx,
+			L1: model.VMExplorerUnspecIndex,
 		})
 		require.NoError(t, err)
 		require.NotNil(t, dump)
@@ -119,10 +119,10 @@ func TestVMExplorer(t *testing.T) {
 		t.Logf("HUGEPAGE: 0x%016x (%d, %d, %d)", addr, pgdIdx, pudIdx, pmdIdx)
 
 		dump, err := vme.Dump(key, model.VMEPath{
-			PGD: pgdIdx,
-			PUD: pudIdx,
-			PMD: model.VMExplorerUnspecIndex,
-			PTE: model.VMExplorerUnspecIndex,
+			L4: pgdIdx,
+			L3: pudIdx,
+			L2: model.VMExplorerUnspecIndex,
+			L1: model.VMExplorerUnspecIndex,
 		})
 		require.NoError(t, err)
 		require.NotNil(t, dump)
@@ -134,7 +134,7 @@ func TestVMExplorer(t *testing.T) {
 	})
 }
 
-func printEntries(t *testing.T, label string, entries []model.VMEntry) {
+func printEntries(t *testing.T, label string, entries []model.NetlinkVMEntry) {
 	t.Helper()
 	t.Logf("===================== %s =====================\n", label)
 	for idx, entry := range entries {

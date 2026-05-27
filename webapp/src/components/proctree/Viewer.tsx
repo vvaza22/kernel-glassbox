@@ -32,6 +32,7 @@ import {
   VERTICAL_SPACE_GROWTH_CAP,
   NODE_POS_EQUALITY_THRESHOLD,
 } from "@/config/proctree";
+import { Link } from "wouter";
 
 function verticalSpacer(numChildren: number) {
   return (
@@ -131,14 +132,16 @@ function LeaderNode({ data }: NodeProps<Node<LeaderNodeData>>) {
 
         {!isRoot && (
           <div className="flex items-center flex-shrink-0 text-muted-foreground gap-1">
-            <button
-              className={cn(
-                "p-1 rounded-md cursor-pointer",
-                "hover:bg-accent hover:text-accent-foreground",
-              )}
-            >
-              <SearchCode className="w-4 h-4" />
-            </button>
+            <Link href={`/vm/${data.pid}/${data.startTime}`}>
+              <button
+                className={cn(
+                  "p-1 rounded-md cursor-pointer",
+                  "hover:bg-accent hover:text-accent-foreground",
+                )}
+              >
+                <SearchCode className="w-4 h-4" />
+              </button>
+            </Link>
           </div>
         )}
       </div>
