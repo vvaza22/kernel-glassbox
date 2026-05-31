@@ -12,6 +12,7 @@ export type WebsocketVMEntry = {
   size: string;
   leaf: boolean;
   present: boolean;
+  none: boolean;
 };
 
 export function isWebsocketVMEntry(obj: any): obj is WebsocketVMEntry {
@@ -25,7 +26,8 @@ export function isWebsocketVMEntry(obj: any): obj is WebsocketVMEntry {
     typeof obj.userVAEnd === "string" &&
     typeof obj.size === "string" &&
     typeof obj.leaf === "boolean" &&
-    typeof obj.present === "boolean"
+    typeof obj.present === "boolean" &&
+    typeof obj.none === "boolean"
   );
 }
 

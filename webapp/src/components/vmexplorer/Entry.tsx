@@ -84,6 +84,41 @@ function EntryRow({ label, value }: EntryRowProps) {
   );
 }
 
+function entryBorderStyle(entry: VMEntry): string {
+  if (!entry.present) {
+    return "border-yellow-800 border-dashed";
+  }
+  if (entry.leaf) {
+    return "border-emerald-800";
+  }
+  return "border-border hover:border-zinc-700";
+}
+
+function EntryLabel({ entry }: { entry: VMEntry }) {
+  const { t } = useTranslation("vmexplorer");
+
+  if (!entry.present) {
+    return (
+      <div className="font-mono text-sm text-yellow-400">{t("notPresent")}</div>
+    );
+  }
+
+  if (entry.leaf) {
+    return (
+      <div className="font-mono text-sm text-emerald-400">
+        {entry.sizeFormatted} {t("pageUpper")}
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex gap-1 text-sm items-center text-sky-300">
+      <span>{t("pageTableUpper")}</span>
+      <ArrowRight size={16} />
+    </div>
+  );
+}
+
 type EntryProps = {
   entry: VMEntry;
   link?: string;
@@ -101,23 +136,12 @@ export default function Entry({ entry, link }: EntryProps) {
               "p-3",
               "border rounded-md",
               "transition-colors",
-              entry.leaf
-                ? "border-emerald-800"
-                : "border-border hover:border-zinc-700",
+              entryBorderStyle(entry),
             )}
           >
             <div className="flex items-center justify-between mb-1">
               <div className="font-mono font-bold text-sm">[{entry.index}]</div>
-              {entry.leaf ? (
-                <div className="font-mono text-sm text-emerald-400">
-                  {t("pageUpper")}
-                </div>
-              ) : (
-                <div className="flex gap-1 text-sm items-center text-sky-300">
-                  <span>{t("pageTableUpper")}</span>
-                  <ArrowRight size={16} />
-                </div>
-              )}
+              <EntryLabel entry={entry} />
             </div>
             <div>
               <EntryRow label={t("entryRaw")} value={entry.rawValueHex} />

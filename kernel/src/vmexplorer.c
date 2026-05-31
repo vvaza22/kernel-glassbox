@@ -123,8 +123,10 @@ static void _gb_vme_fill_l4(struct gb_vme *vme, p4d_t *base)
 		p4d_t entry = p4dp_get(base + i);
 		struct gb_vme_entry *vme_entry_ptr = &vme->entries[i];
 
-		if (p4d_none(entry))
+		if (p4d_none(entry)) {
+			vme_entry_ptr->none = true;
 			continue;
+		}
 
 		vme_entry_ptr->value = p4d_val(entry);
 		vme_entry_ptr->pa = _gb_vme_l4_pa(entry);
@@ -140,6 +142,7 @@ static void _gb_vme_fill_l4(struct gb_vme *vme, p4d_t *base)
 		vme_entry_ptr->present = p4d_present(entry);
 		vme_entry_ptr->bad = p4d_bad(entry);
 		vme_entry_ptr->leaf = p4d_leaf(entry);
+		vme_entry_ptr->none = false;
 	}
 }
 
@@ -150,8 +153,10 @@ static void _gb_vme_fill_l3(struct gb_vme *vme, pud_t *base,
 		pud_t entry = pudp_get(base + i);
 		struct gb_vme_entry *vme_entry_ptr = &vme->entries[i];
 
-		if (pud_none(entry))
+		if (pud_none(entry)) {
+			vme_entry_ptr->none = true;
 			continue;
+		}
 
 		vme_entry_ptr->value = pud_val(entry);
 		vme_entry_ptr->pa = _gb_vme_l3_pa(entry);
@@ -167,6 +172,7 @@ static void _gb_vme_fill_l3(struct gb_vme *vme, pud_t *base,
 		vme_entry_ptr->present = pud_present(entry);
 		vme_entry_ptr->bad = pud_bad(entry);
 		vme_entry_ptr->leaf = pud_leaf(entry);
+		vme_entry_ptr->none = false;
 	}
 }
 
@@ -177,8 +183,10 @@ static void _gb_vme_fill_l2(struct gb_vme *vme, pmd_t *base,
 		pmd_t entry = pmdp_get(base + i);
 		struct gb_vme_entry *vme_entry_ptr = &vme->entries[i];
 
-		if (pmd_none(entry))
+		if (pmd_none(entry)) {
+			vme_entry_ptr->none = true;
 			continue;
+		}
 
 		vme_entry_ptr->value = pmd_val(entry);
 		vme_entry_ptr->pa = _gb_vme_l2_pa(entry);
@@ -194,6 +202,7 @@ static void _gb_vme_fill_l2(struct gb_vme *vme, pmd_t *base,
 		vme_entry_ptr->present = pmd_present(entry);
 		vme_entry_ptr->bad = pmd_bad(entry);
 		vme_entry_ptr->leaf = pmd_leaf(entry);
+		vme_entry_ptr->none = false;
 	}
 }
 
@@ -204,8 +213,10 @@ static void _gb_vme_fill_l1(struct gb_vme *vme, pte_t *base,
 		pte_t pte_entry = ptep_get(base + i);
 		struct gb_vme_entry *vme_entry_ptr = &vme->entries[i];
 
-		if (pte_none(pte_entry))
+		if (pte_none(pte_entry)) {
+			vme_entry_ptr->none = true;
 			continue;
+		}
 
 		vme_entry_ptr->value = pte_val(pte_entry);
 		vme_entry_ptr->pa = _gb_vme_l1_pa(pte_entry);
@@ -222,6 +233,7 @@ static void _gb_vme_fill_l1(struct gb_vme *vme, pte_t *base,
 		/* PTE entries are never bad and are always leaves */
 		vme_entry_ptr->bad = false;
 		vme_entry_ptr->leaf = true;
+		vme_entry_ptr->none = false;
 	}
 }
 

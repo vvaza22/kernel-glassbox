@@ -25,6 +25,7 @@ type NetlinkVMEntry struct {
 	Present  bool
 	Bad      bool
 	Leaf     bool
+	None     bool
 }
 
 func (e NetlinkVMEntry) String() string {
@@ -42,6 +43,7 @@ func ReadNetlinkVMEntry(parser utils.ByteParser) (NetlinkVMEntry, error) {
 	entry.Present = parser.ReadBool()
 	entry.Bad = parser.ReadBool()
 	entry.Leaf = parser.ReadBool()
+	entry.None = parser.ReadBool()
 
 	return entry, parser.Error()
 }
@@ -60,6 +62,7 @@ type WebsocketVMEntry struct {
 	Size        string `json:"size"`
 	Leaf        bool   `json:"leaf"`
 	Present     bool   `json:"present"`
+	None        bool   `json:"none"`
 }
 
 func ToWebsocketVMEntry(entry NetlinkVMEntry, index int) WebsocketVMEntry {
@@ -73,6 +76,7 @@ func ToWebsocketVMEntry(entry NetlinkVMEntry, index int) WebsocketVMEntry {
 		Size:        fmt.Sprintf("0x%016x", entry.Size),
 		Leaf:        entry.Leaf,
 		Present:     entry.Present,
+		None:        entry.None,
 	}
 }
 

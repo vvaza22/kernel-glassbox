@@ -11,7 +11,7 @@ import { toIndices, toPathObj, toVMEntry } from "@/adapters/vmexplorer";
 export function VMExplorer() {
   const params = useParams();
   const { explore, entries, connected } = useVME();
-  const mappedEntries = entries.filter((e) => e.present).map(toVMEntry);
+  const mappedEntries = entries.filter((e) => !e.none).map(toVMEntry);
 
   // I can safely assume pid/startTime are present, otherwise this page would not be opened
   const pid = params["pid"]!;

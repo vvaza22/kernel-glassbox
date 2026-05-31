@@ -20,6 +20,7 @@ export function toVMEntry(entry: WebsocketVMEntry): VMEntry {
     sizeFormatted: filesize(sizeBigInt, { base: 2 }),
     leaf: entry.leaf,
     present: entry.present,
+    none: entry.none,
   };
 }
 

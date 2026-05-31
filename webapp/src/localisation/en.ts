@@ -17,6 +17,7 @@ export const en = {
     lvl1: "PTE",
     pageUpper: "PAGE",
     pageTableUpper: "PGTBL",
+    notPresent: "NOT PRESENT",
     entryRaw: "Raw(HEX)",
     entryPA: "PA",
     entryKernelVA: "KERNEL VA",

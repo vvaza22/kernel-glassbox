@@ -23,7 +23,11 @@ export default function Entries({
       {entries.map((entry) => (
         <Entry
           entry={entry}
-          link={!entry.leaf ? toLink([...pathIndices, entry.index]) : undefined}
+          link={
+            !entry.leaf && entry.present
+              ? toLink([...pathIndices, entry.index])
+              : undefined
+          }
         />
       ))}
     </div>
