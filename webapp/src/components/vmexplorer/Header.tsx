@@ -56,7 +56,6 @@ export default function Header({ pid, startTime }: HeaderProps) {
         <div className={cn("flex flex-col", "gap-1")}>
           <h1 className={cn("text-2xl font-mono")}>{t("title")}</h1>
           <div className="flex flex-row justify-start gap-1">
-            {/* <LabelBadge label={t("commBadge")} value={"systemd"} /> */}
             <LabelBadge label={t("pidBadge")} value={pid} />
             <LabelBadge label={t("startTimeBadge")} value={startTime} />
           </div>
