@@ -1,14 +1,14 @@
 import {
-  VME_MASK_ACCESSED,
-  VME_MASK_DIRTY,
-  VME_MASK_GLOBAL,
-  VME_MASK_NX,
-  VME_MASK_PCD,
-  VME_MASK_PRESENT,
-  VME_MASK_PSE,
-  VME_MASK_PWT,
-  VME_MASK_RW,
-  VME_MASK_USER,
+  VME_BIT_ACCESSED,
+  VME_BIT_DIRTY,
+  VME_BIT_GLOBAL,
+  VME_BIT_NX,
+  VME_BIT_PCD,
+  VME_BIT_PRESENT,
+  VME_BIT_PSE,
+  VME_BIT_PWT,
+  VME_BIT_RW,
+  VME_BIT_USER,
   type VMEntry,
 } from "@/types/ui/vmexplorer";
 import { cn } from "@/shadcn/lib/utils";
@@ -24,23 +24,23 @@ import {
 import { isFlagSet } from "@/helpers/vmexplorer";
 import OptionalLink from "../shared/OptionalLink";
 
-function toBadgeStyle(flagMask: bigint): string {
+function toBadgeStyle(bit: bigint): string {
   /* 
     Note: bg-950, text-300 combo idea is inspired by shadcn's documentation:
     https://ui.shadcn.com/docs/components/base/badge 
     */
-  switch (flagMask) {
-    case VME_MASK_PRESENT:
+  switch (bit) {
+    case VME_BIT_PRESENT:
       return "bg-sky-950 text-sky-300";
-    case VME_MASK_ACCESSED:
+    case VME_BIT_ACCESSED:
       return "bg-yellow-950 text-yellow-300";
-    case VME_MASK_DIRTY:
+    case VME_BIT_DIRTY:
       return "bg-purple-950 text-purple-300";
-    case VME_MASK_USER:
+    case VME_BIT_USER:
       return "bg-blue-950 text-blue-300";
-    case VME_MASK_RW:
+    case VME_BIT_RW:
       return "bg-green-950 text-green-300";
-    case VME_MASK_NX:
+    case VME_BIT_NX:
       return "bg-red-950 text-red-300";
     default:
       return "bg-gray-950 text-gray-300";
@@ -49,21 +49,21 @@ function toBadgeStyle(flagMask: bigint): string {
 
 type FlagRowProps = {
   rawValue: bigint;
-  flagMask: bigint;
+  bit: bigint;
   label: string;
   desc: string;
 };
 
-function FlagRow({ rawValue, flagMask, label, desc }: FlagRowProps) {
-  if (!isFlagSet(rawValue, flagMask)) {
+function FlagRow({ rawValue, bit, label, desc }: FlagRowProps) {
+  if (!isFlagSet(rawValue, bit)) {
     return null;
   }
   return (
     <div className="flex flex-row items-center justify-between">
-      <Badge
-        className={cn("text-sm font-mono font-bold", toBadgeStyle(flagMask))}
-      >
-        {label}
+      <Badge className={cn("text-sm font-mono font-bold", toBadgeStyle(bit))}>
+        <span>{bit}</span>
+        <span>|</span>
+        <span>{label}</span>
       </Badge>
       <span className="font-mono text-sm text-muted-foreground">{desc}</span>
     </div>
@@ -128,7 +128,10 @@ export default function Entry({ entry, link }: EntryProps) {
           </div>
         </OptionalLink>
       </HoverCardTrigger>
-      <HoverCardContent side="right" className="ring-border ring-1">
+      <HoverCardContent
+        side="right"
+        className="ring-border ring-1 xl:min-w-[400px]"
+      >
         <div className={cn("flex flex-col gap-1")}>
           <h2 className="font-bold font-mono text-muted-foreground text-base">
             {t("regionLabel")}
@@ -157,61 +160,61 @@ export default function Entry({ entry, link }: EntryProps) {
           </h2>
           <FlagRow
             rawValue={entry.rawValue}
-            flagMask={VME_MASK_PRESENT}
+            bit={VME_BIT_PRESENT}
             label={t("flags.present.label")}
             desc={t("flags.present.desc")}
           />
           <FlagRow
             rawValue={entry.rawValue}
-            flagMask={VME_MASK_RW}
+            bit={VME_BIT_RW}
             label={t("flags.rw.label")}
             desc={t("flags.rw.desc")}
           />
           <FlagRow
             rawValue={entry.rawValue}
-            flagMask={VME_MASK_USER}
+            bit={VME_BIT_USER}
             label={t("flags.user.label")}
             desc={t("flags.user.desc")}
           />
           <FlagRow
             rawValue={entry.rawValue}
-            flagMask={VME_MASK_PWT}
+            bit={VME_BIT_PWT}
             label={t("flags.pwt.label")}
             desc={t("flags.pwt.desc")}
           />
           <FlagRow
             rawValue={entry.rawValue}
-            flagMask={VME_MASK_PCD}
+            bit={VME_BIT_PCD}
             label={t("flags.pcd.label")}
             desc={t("flags.pcd.desc")}
           />
           <FlagRow
             rawValue={entry.rawValue}
-            flagMask={VME_MASK_ACCESSED}
+            bit={VME_BIT_ACCESSED}
             label={t("flags.accessed.label")}
             desc={t("flags.accessed.desc")}
           />
           <FlagRow
             rawValue={entry.rawValue}
-            flagMask={VME_MASK_DIRTY}
+            bit={VME_BIT_DIRTY}
             label={t("flags.dirty.label")}
             desc={t("flags.dirty.desc")}
           />
           <FlagRow
             rawValue={entry.rawValue}
-            flagMask={VME_MASK_PSE}
+            bit={VME_BIT_PSE}
             label={t("flags.pse.label")}
             desc={t("flags.pse.desc")}
           />
           <FlagRow
             rawValue={entry.rawValue}
-            flagMask={VME_MASK_GLOBAL}
+            bit={VME_BIT_GLOBAL}
             label={t("flags.global.label")}
             desc={t("flags.global.desc")}
           />
           <FlagRow
             rawValue={entry.rawValue}
-            flagMask={VME_MASK_NX}
+            bit={VME_BIT_NX}
             label={t("flags.nx.label")}
             desc={t("flags.nx.desc")}
           />
