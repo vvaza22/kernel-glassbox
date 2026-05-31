@@ -21,6 +21,7 @@ type NetlinkVMEntry struct {
 	PA       uint64
 	KernelVA uint64
 	UserVA   uint64
+	Size     uint64
 	Present  bool
 	Bad      bool
 	Leaf     bool
@@ -37,6 +38,7 @@ func ReadNetlinkVMEntry(parser utils.ByteParser) (NetlinkVMEntry, error) {
 	entry.PA = parser.ReadUint64()
 	entry.KernelVA = parser.ReadUint64()
 	entry.UserVA = parser.ReadUint64()
+	entry.Size = parser.ReadUint64()
 	entry.Present = parser.ReadBool()
 	entry.Bad = parser.ReadBool()
 	entry.Leaf = parser.ReadBool()
@@ -49,24 +51,28 @@ type NetlinkVMEDump struct {
 }
 
 type WebsocketVMEntry struct {
-	Index    int32  `json:"index"`
-	RawValue string `json:"rawValue"`
-	PA       string `json:"pa"`
-	KernelVA string `json:"kernelVA"`
-	UserVA   string `json:"userVA"`
-	Leaf     bool   `json:"leaf"`
-	Present  bool   `json:"present"`
+	Index       int32  `json:"index"`
+	RawValue    string `json:"rawValue"`
+	PA          string `json:"pa"`
+	KernelVA    string `json:"kernelVA"`
+	UserVAStart string `json:"userVAStart"`
+	UserVAEnd   string `json:"userVAEnd"`
+	Size        string `json:"size"`
+	Leaf        bool   `json:"leaf"`
+	Present     bool   `json:"present"`
 }
 
 func ToWebsocketVMEntry(entry NetlinkVMEntry, index int) WebsocketVMEntry {
 	return WebsocketVMEntry{
-		Index:    int32(index),
-		RawValue: fmt.Sprintf("0x%016x", entry.Value),
-		PA:       fmt.Sprintf("0x%016x", entry.PA),
-		KernelVA: fmt.Sprintf("0x%016x", entry.KernelVA),
-		UserVA:   fmt.Sprintf("0x%016x", entry.UserVA),
-		Leaf:     entry.Leaf,
-		Present:  entry.Present,
+		Index:       int32(index),
+		RawValue:    fmt.Sprintf("0x%016x", entry.Value),
+		PA:          fmt.Sprintf("0x%016x", entry.PA),
+		KernelVA:    fmt.Sprintf("0x%016x", entry.KernelVA),
+		UserVAStart: fmt.Sprintf("0x%016x", entry.UserVA),
+		UserVAEnd:   fmt.Sprintf("0x%016x", entry.UserVA+entry.Size),
+		Size:        fmt.Sprintf("0x%016x", entry.Size),
+		Leaf:        entry.Leaf,
+		Present:     entry.Present,
 	}
 }
 

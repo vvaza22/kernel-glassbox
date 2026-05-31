@@ -4,15 +4,20 @@ import {
   type VMEPath,
   type WebsocketVMEntry,
 } from "@/types/ws/vmexplorer";
+import { filesize } from "filesize";
 
 export function toVMEntry(entry: WebsocketVMEntry): VMEntry {
+  const sizeBigInt = BigInt(entry.size);
   return {
     index: entry.index,
     rawValue: BigInt(entry.rawValue),
     rawValueHex: entry.rawValue,
     pa: entry.pa,
     kernelVA: entry.kernelVA,
-    userVA: entry.userVA,
+    userVAStart: entry.userVAStart,
+    userVAEnd: entry.userVAEnd,
+    size: sizeBigInt,
+    sizeFormatted: filesize(sizeBigInt, { base: 2 }),
     leaf: entry.leaf,
     present: entry.present,
   };

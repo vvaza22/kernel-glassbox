@@ -1,6 +1,5 @@
 import { cn } from "@/shadcn/lib/utils";
 import type { VMEntry } from "@/types/ui/vmexplorer";
-import OptionalLink from "../shared/OptionalLink";
 import Entry from "./Entry";
 
 type EntriesProps = {
@@ -22,12 +21,10 @@ export default function Entries({
       )}
     >
       {entries.map((entry) => (
-        <OptionalLink
-          key={entry.index}
-          href={!entry.leaf ? toLink([...pathIndices, entry.index]) : null}
-        >
-          <Entry entry={entry} />
-        </OptionalLink>
+        <Entry
+          entry={entry}
+          link={!entry.leaf ? toLink([...pathIndices, entry.index]) : undefined}
+        />
       ))}
     </div>
   );

@@ -136,6 +136,7 @@ static void _gb_vme_fill_l4(struct gb_vme *vme, p4d_t *base)
 				.l2 = GB_VME_UNSPEC_INDEX,
 				.l1 = GB_VME_UNSPEC_INDEX,
 			});
+		vme_entry_ptr->size = P4D_SIZE;
 		vme_entry_ptr->present = p4d_present(entry);
 		vme_entry_ptr->bad = p4d_bad(entry);
 		vme_entry_ptr->leaf = p4d_leaf(entry);
@@ -162,6 +163,7 @@ static void _gb_vme_fill_l3(struct gb_vme *vme, pud_t *base,
 				.l2 = GB_VME_UNSPEC_INDEX,
 				.l1 = GB_VME_UNSPEC_INDEX,
 			});
+		vme_entry_ptr->size = PUD_SIZE;
 		vme_entry_ptr->present = pud_present(entry);
 		vme_entry_ptr->bad = pud_bad(entry);
 		vme_entry_ptr->leaf = pud_leaf(entry);
@@ -188,6 +190,7 @@ static void _gb_vme_fill_l2(struct gb_vme *vme, pmd_t *base,
 				.l2 = i,
 				.l1 = GB_VME_UNSPEC_INDEX,
 			});
+		vme_entry_ptr->size = PMD_SIZE;
 		vme_entry_ptr->present = pmd_present(entry);
 		vme_entry_ptr->bad = pmd_bad(entry);
 		vme_entry_ptr->leaf = pmd_leaf(entry);
@@ -214,6 +217,7 @@ static void _gb_vme_fill_l1(struct gb_vme *vme, pte_t *base,
 				.l2 = path.l2,
 				.l1 = i,
 			});
+		vme_entry_ptr->size = PAGE_SIZE;
 		vme_entry_ptr->present = pte_present(pte_entry);
 		/* PTE entries are never bad and are always leaves */
 		vme_entry_ptr->bad = false;

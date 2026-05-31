@@ -28,6 +28,7 @@ struct gb_vme_entry {
 	u64 pa;
 	u64 kernel_va;
 	u64 user_va;
+	u64 size;
 	bool present;
 	bool bad;
 	bool leaf;
