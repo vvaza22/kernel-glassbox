@@ -26,7 +26,7 @@ import OptionalLink from "../shared/OptionalLink";
 
 function toBadgeStyle(flagMask: bigint): string {
   /* 
-    Note: bg-950, text-300 combo is taken from shadcn's documentation which I really liked:
+    Note: bg-950, text-300 combo idea is inspired by shadcn's documentation:
     https://ui.shadcn.com/docs/components/base/badge 
     */
   switch (flagMask) {
