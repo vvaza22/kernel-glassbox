@@ -12,6 +12,7 @@ export type TreeNode = {
   parentTreeNodeId: string;
   name: string;
   pid: number;
+  startTime: number;
   subNodes: SubTreeNode[];
   childTreeNodeIds: string[];
 };
@@ -25,6 +26,7 @@ export type LeaderNodeData = {
   id: string;
   name: string;
   pid: number;
+  startTime: number;
   numSubNodes: number;
   hasChildren: boolean;
   expanded: boolean;

@@ -123,8 +123,10 @@ static void _gb_vme_fill_l4(struct gb_vme *vme, p4d_t *base)
 		p4d_t entry = p4dp_get(base + i);
 		struct gb_vme_entry *vme_entry_ptr = &vme->entries[i];
 
-		if (p4d_none(entry))
+		if (p4d_none(entry)) {
+			vme_entry_ptr->none = true;
 			continue;
+		}
 
 		vme_entry_ptr->value = p4d_val(entry);
 		vme_entry_ptr->pa = _gb_vme_l4_pa(entry);
@@ -136,9 +138,11 @@ static void _gb_vme_fill_l4(struct gb_vme *vme, p4d_t *base)
 				.l2 = GB_VME_UNSPEC_INDEX,
 				.l1 = GB_VME_UNSPEC_INDEX,
 			});
+		vme_entry_ptr->size = P4D_SIZE;
 		vme_entry_ptr->present = p4d_present(entry);
 		vme_entry_ptr->bad = p4d_bad(entry);
 		vme_entry_ptr->leaf = p4d_leaf(entry);
+		vme_entry_ptr->none = false;
 	}
 }
 
@@ -149,8 +153,10 @@ static void _gb_vme_fill_l3(struct gb_vme *vme, pud_t *base,
 		pud_t entry = pudp_get(base + i);
 		struct gb_vme_entry *vme_entry_ptr = &vme->entries[i];
 
-		if (pud_none(entry))
+		if (pud_none(entry)) {
+			vme_entry_ptr->none = true;
 			continue;
+		}
 
 		vme_entry_ptr->value = pud_val(entry);
 		vme_entry_ptr->pa = _gb_vme_l3_pa(entry);
@@ -162,9 +168,11 @@ static void _gb_vme_fill_l3(struct gb_vme *vme, pud_t *base,
 				.l2 = GB_VME_UNSPEC_INDEX,
 				.l1 = GB_VME_UNSPEC_INDEX,
 			});
+		vme_entry_ptr->size = PUD_SIZE;
 		vme_entry_ptr->present = pud_present(entry);
 		vme_entry_ptr->bad = pud_bad(entry);
 		vme_entry_ptr->leaf = pud_leaf(entry);
+		vme_entry_ptr->none = false;
 	}
 }
 
@@ -175,8 +183,10 @@ static void _gb_vme_fill_l2(struct gb_vme *vme, pmd_t *base,
 		pmd_t entry = pmdp_get(base + i);
 		struct gb_vme_entry *vme_entry_ptr = &vme->entries[i];
 
-		if (pmd_none(entry))
+		if (pmd_none(entry)) {
+			vme_entry_ptr->none = true;
 			continue;
+		}
 
 		vme_entry_ptr->value = pmd_val(entry);
 		vme_entry_ptr->pa = _gb_vme_l2_pa(entry);
@@ -188,9 +198,11 @@ static void _gb_vme_fill_l2(struct gb_vme *vme, pmd_t *base,
 				.l2 = i,
 				.l1 = GB_VME_UNSPEC_INDEX,
 			});
+		vme_entry_ptr->size = PMD_SIZE;
 		vme_entry_ptr->present = pmd_present(entry);
 		vme_entry_ptr->bad = pmd_bad(entry);
 		vme_entry_ptr->leaf = pmd_leaf(entry);
+		vme_entry_ptr->none = false;
 	}
 }
 
@@ -201,8 +213,10 @@ static void _gb_vme_fill_l1(struct gb_vme *vme, pte_t *base,
 		pte_t pte_entry = ptep_get(base + i);
 		struct gb_vme_entry *vme_entry_ptr = &vme->entries[i];
 
-		if (pte_none(pte_entry))
+		if (pte_none(pte_entry)) {
+			vme_entry_ptr->none = true;
 			continue;
+		}
 
 		vme_entry_ptr->value = pte_val(pte_entry);
 		vme_entry_ptr->pa = _gb_vme_l1_pa(pte_entry);
@@ -214,10 +228,12 @@ static void _gb_vme_fill_l1(struct gb_vme *vme, pte_t *base,
 				.l2 = path.l2,
 				.l1 = i,
 			});
+		vme_entry_ptr->size = PAGE_SIZE;
 		vme_entry_ptr->present = pte_present(pte_entry);
 		/* PTE entries are never bad and are always leaves */
 		vme_entry_ptr->bad = false;
 		vme_entry_ptr->leaf = true;
+		vme_entry_ptr->none = false;
 	}
 }
 
@@ -230,8 +246,7 @@ static pud_t *_gb_vme_l4_to_l3(p4d_t *base, int index)
 	*/
 	const p4d_t entry = p4dp_get(base + index);
 
-	if (p4d_none(entry) || p4d_bad(entry) || p4d_leaf(entry) ||
-	    !p4d_present(entry)) {
+	if (p4d_none(entry) || p4d_leaf(entry) || !p4d_present(entry)) {
 		return NULL;
 	}
 
@@ -242,8 +257,7 @@ static pmd_t *_gb_vme_l3_to_l2(pud_t *base, int index)
 {
 	const pud_t entry = pudp_get(base + index);
 
-	if (pud_none(entry) || pud_bad(entry) || pud_leaf(entry) ||
-	    !pud_present(entry)) {
+	if (pud_none(entry) || pud_leaf(entry) || !pud_present(entry)) {
 		return NULL;
 	}
 
@@ -254,8 +268,18 @@ static pte_t *_gb_vme_l2_to_l1(pmd_t *base, int index)
 {
 	pmd_t entry = pmdp_get(base + index);
 
-	if (pmd_none(entry) || pmd_bad(entry) || pmd_leaf(entry) ||
-	    pmd_trans_huge(entry) || !pmd_present(entry)) {
+	if (pmd_none(entry)) {
+		pr_err("%s: PMD[%d] is none\n", __func__, index);
+		return NULL;
+	}
+
+	if (!pmd_present(entry)) {
+		pr_err("%s: PMD[%d] is not present\n", __func__, index);
+		return NULL;
+	}
+
+	if (pmd_leaf(entry)) {
+		pr_err("%s: PMD[%d] is a leaf\n", __func__, index);
 		return NULL;
 	}
 

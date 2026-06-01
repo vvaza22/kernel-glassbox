@@ -1,4 +1,5 @@
-import type { ProctreeNode, TaskKey } from "@/types/ws/proctree";
+import type { ProctreeNode } from "@/types/ws/proctree";
+import type { TaskKey } from "@/types/ws/shared";
 import type {
   SubTreeNode,
   TreeNode,
@@ -88,6 +89,7 @@ export function toTreeNodes(nodes: ProctreeNode[]): TreeNode[] {
     parentTreeNodeId: "",
     name: "swapper",
     pid: 0,
+    startTime: 0,
     subNodes: [],
     childTreeNodeIds: tgidToChildTgids.get(kernelId) || [],
   };
@@ -104,6 +106,7 @@ export function toTreeNodes(nodes: ProctreeNode[]): TreeNode[] {
       parentTreeNodeId: realParentTgid,
       name: node.name,
       pid: node.self.pid,
+      startTime: node.self.startTime,
       subNodes: subNodes,
       childTreeNodeIds: childTreeNodeIds,
     };
@@ -131,6 +134,7 @@ export function toFlowNodes(
       id: node.id,
       name: node.name,
       pid: node.pid,
+      startTime: node.startTime,
       numSubNodes: node.subNodes.length,
       hasChildren: node.childTreeNodeIds.length > 0,
       expanded: isExpanded(node.id),

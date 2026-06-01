@@ -28,9 +28,11 @@ struct gb_vme_entry {
 	u64 pa;
 	u64 kernel_va;
 	u64 user_va;
+	u64 size;
 	bool present;
 	bool bad;
 	bool leaf;
+	bool none;
 };
 
 struct gb_vme {
@@ -40,7 +42,7 @@ struct gb_vme {
 #define GB_VME_UNSPEC_INDEX -1
 
 /*
-	Remainder to myself: ALWAYS prefix field names.
+	Remainder to myself: ALWAYS check if field names match some MACRO.
 	pgd_index turns out to be a MACRO in linux/pgtable.h, 
 	naming struct field pgd_index messes up the whole code.
 */

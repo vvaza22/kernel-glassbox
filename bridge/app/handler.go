@@ -3,6 +3,7 @@ package app
 import (
 	"bridge/model"
 	"bridge/utils"
+	"encoding/json"
 	"fmt"
 )
 
@@ -24,11 +25,13 @@ type handler struct {
 
 	proctree  ProctreeManager
 	schedhook SchedhookManager
+	vme       VMExplorerManager
 }
 
 type HandlerParams struct {
 	Proctree  ProctreeManager
 	Schedhook SchedhookManager
+	VME       VMExplorerManager
 }
 
 func NewHandler(ctx *model.WSContext, params *HandlerParams) Handler {
@@ -37,6 +40,7 @@ func NewHandler(ctx *model.WSContext, params *HandlerParams) Handler {
 		writeCh:   ctx.WriteCh,
 		proctree:  params.Proctree,
 		schedhook: params.Schedhook,
+		vme:       params.VME,
 	}
 }
 
@@ -53,8 +57,31 @@ func (h *handler) OnClientMessage(msg model.WSMessage) {
 		h.handleCapStart()
 	case model.WSMsgClientReqSchedhookCapEnd:
 		h.handleCapEnd()
+	case model.WSMsgClientReqVMEDump:
+		req := model.WebsocketVMEReq{}
+		err := json.Unmarshal(msg.Payload, &req)
+		if err != nil {
+			// TODO: Send error message back to client
+			return
+		}
+		h.handleVMEDump(req)
 	default:
 	}
+}
+
+func (h *handler) handleVMEDump(req model.WebsocketVMEReq) {
+	entries, err := h.vme.Explore(req.Key, req.Path)
+	if err != nil {
+		// TODO: Send error message back to client
+		return
+	}
+	respMsg, err := model.NewWSMsg(model.WSMsgSrvVMEDump, &model.WebsocketVMEDump{
+		Entries: entries,
+	})
+	if err != nil {
+		return
+	}
+	h.sendMessage(respMsg)
 }
 
 func (h *handler) handleCapStart() {

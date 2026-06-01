@@ -17,3 +17,6 @@ gorun:
 
 webtest:
 	@cd webapp && npm test
+
+webrun:
+	@cd webapp && npm run dev
