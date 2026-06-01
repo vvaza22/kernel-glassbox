@@ -62,6 +62,7 @@ type WebsocketVMEntry struct {
 	Size        string `json:"size"`
 	Leaf        bool   `json:"leaf"`
 	Present     bool   `json:"present"`
+	Bad         bool   `json:"bad"`
 	None        bool   `json:"none"`
 }
 
@@ -76,6 +77,7 @@ func ToWebsocketVMEntry(entry NetlinkVMEntry, index int) WebsocketVMEntry {
 		Size:        fmt.Sprintf("0x%016x", entry.Size),
 		Leaf:        entry.Leaf,
 		Present:     entry.Present,
+		Bad:         entry.Bad,
 		None:        entry.None,
 	}
 }

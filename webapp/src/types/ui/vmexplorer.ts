@@ -25,5 +25,6 @@ export type VMEntry = {
   sizeFormatted: string;
   leaf: boolean;
   present: boolean;
+  bad: boolean;
   none: boolean;
 };

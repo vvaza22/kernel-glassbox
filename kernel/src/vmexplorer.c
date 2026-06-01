@@ -246,8 +246,7 @@ static pud_t *_gb_vme_l4_to_l3(p4d_t *base, int index)
 	*/
 	const p4d_t entry = p4dp_get(base + index);
 
-	if (p4d_none(entry) || p4d_bad(entry) || p4d_leaf(entry) ||
-	    !p4d_present(entry)) {
+	if (p4d_none(entry) || p4d_leaf(entry) || !p4d_present(entry)) {
 		return NULL;
 	}
 
@@ -258,8 +257,7 @@ static pmd_t *_gb_vme_l3_to_l2(pud_t *base, int index)
 {
 	const pud_t entry = pudp_get(base + index);
 
-	if (pud_none(entry) || pud_bad(entry) || pud_leaf(entry) ||
-	    !pud_present(entry)) {
+	if (pud_none(entry) || pud_leaf(entry) || !pud_present(entry)) {
 		return NULL;
 	}
 
@@ -270,8 +268,18 @@ static pte_t *_gb_vme_l2_to_l1(pmd_t *base, int index)
 {
 	pmd_t entry = pmdp_get(base + index);
 
-	if (pmd_none(entry) || pmd_bad(entry) || pmd_leaf(entry) ||
-	    pmd_trans_huge(entry) || !pmd_present(entry)) {
+	if (pmd_none(entry)) {
+		pr_err("%s: PMD[%d] is none\n", __func__, index);
+		return NULL;
+	}
+
+	if (!pmd_present(entry)) {
+		pr_err("%s: PMD[%d] is not present\n", __func__, index);
+		return NULL;
+	}
+
+	if (pmd_leaf(entry)) {
+		pr_err("%s: PMD[%d] is a leaf\n", __func__, index);
 		return NULL;
 	}
 
