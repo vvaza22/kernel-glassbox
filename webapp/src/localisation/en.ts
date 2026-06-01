@@ -46,7 +46,7 @@ export const en = {
       },
       pcd: {
         label: "PCD",
-        desc: "Page Cache Disable",
+        desc: "Page Cache Disabled",
       },
       accessed: {
         label: "ACCESSED",
