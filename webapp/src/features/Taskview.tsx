@@ -1,12 +1,14 @@
 import useTaskview from "@/hooks/taskview";
 import { useEffect } from "react";
 import { useParams } from "wouter";
+import { useTranslation } from "react-i18next";
 import Loader from "@/components/ui/Loader";
 import View from "@/components/taskview/View";
 
 export default function Taskview() {
   const params = useParams();
   const { getView, viewData, connected } = useTaskview();
+  const { t } = useTranslation("taskview");
 
   const pid = params["pid"]!;
   const startTime = params["startTime"]!;
@@ -20,13 +22,8 @@ export default function Taskview() {
     getView(key);
   }, [connected]);
 
-  useEffect(() => {
-    if (!viewData) return;
-    console.log("Received taskview data:", viewData);
-  }, [viewData]);
-
   return viewData === null ? (
-    <Loader label="Loading task view..." />
+    <Loader label={t("loading")} />
   ) : (
     <View viewData={viewData} />
   );

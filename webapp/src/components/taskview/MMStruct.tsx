@@ -1,15 +1,38 @@
 import type { WebsocketMemoryData } from "@/types/ws/taskview";
 import { Field } from "./Shared";
+import { Link } from "wouter";
+import { ArrowRight } from "lucide-react";
+import { cn } from "@/shadcn/lib/utils";
+import { useTranslation } from "react-i18next";
 
 type MMStructProps = {
+  pid: string;
+  startTime: string;
   memory: WebsocketMemoryData;
 };
 
-export default function MMStruct({ memory }: MMStructProps) {
+export default function MMStruct({ memory, pid, startTime }: MMStructProps) {
+  const { t } = useTranslation("taskview");
+
   return (
     <div>
       <div className="px-4 py-2 bg-red-950">
-        <span className="font-bold font-mono text-red-300">mm_struct</span>
+        <div className="flex justify-between items-center">
+          <span className="font-bold font-mono text-red-300">mm_struct</span>
+          <Link
+            href={`/vm/${pid}/${startTime}`}
+            className={cn(
+              "flex items-center gap-1",
+              "transition-colors",
+              "hover:bg-red-900",
+              "rounded-xl",
+              "px-2 py-1",
+            )}
+          >
+            <span className="font-mono text-sm">{t("explorePageTables")}</span>
+            <ArrowRight size={16} />
+          </Link>
+        </div>
       </div>
       <div className="mt-2">
         <Field name="mmap_base" value={memory.mmapBase} />

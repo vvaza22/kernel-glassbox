@@ -25,7 +25,11 @@ export default function View({ viewData }: ViewProps) {
         )}
       >
         <TaskStruct viewData={viewData} />
-        <MMStruct memory={viewData.memory} />
+        <MMStruct
+          memory={viewData.memory}
+          pid={viewData.pid}
+          startTime={viewData.startTime}
+        />
         <div>
           <Creds credData={viewData.realCreds} />
           <div className="mt-4">

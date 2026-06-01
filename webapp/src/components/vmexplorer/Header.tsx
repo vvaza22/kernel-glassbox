@@ -2,6 +2,8 @@ import { useTranslation } from "react-i18next";
 import { cn } from "@/shadcn/lib/utils";
 import { Badge } from "@/shadcn/components/ui/badge";
 import BackLink from "../shared/BackLink";
+import { Link } from "wouter";
+import { SearchCode } from "lucide-react";
 
 type LabelBadgeProps = {
   label: string;
@@ -28,7 +30,20 @@ export default function Header({ pid, startTime }: HeaderProps) {
   return (
     <div className="mb-5">
       <div className="mb-2">
-        <BackLink />
+        <div className="flex items-center gap-2">
+          <BackLink />
+          <Link
+            href={`/view/${pid}/${startTime}`}
+            className={cn(
+              "flex items-center gap-1",
+              "text-green-300 hover:bg-green-950 rounded-md",
+              "transition-colors",
+            )}
+          >
+            <SearchCode size={16} />
+            <span className="text-sm">{t("taskviewButton")}</span>
+          </Link>
+        </div>
       </div>
       <div className="flex">
         <div className={cn("flex flex-col", "gap-1")}>
