@@ -11,6 +11,7 @@ import "@/localisation/i18n";
 /* Tailwind + shadcn UI styles */
 import "@/shadcn/styles/app.css";
 import { VMExplorer } from "./features/VMExplorer";
+import Taskview from "./features/Taskview";
 
 export default function App() {
   const connect = useWSStore((s) => s.connect);
@@ -36,6 +37,9 @@ export default function App() {
         </Route>
         <Route path="/vm/:pid/:startTime/*?">
           <VMExplorer />
+        </Route>
+        <Route path="/view/:pid/:startTime">
+          <Taskview />
         </Route>
       </Switch>
     </div>

@@ -10,6 +10,7 @@ const (
 	WSMsgSrvProctreeDump
 	WSMsgSrvSchedhookCap
 	WSMsgSrvVMEDump
+	WSMsgSrvTaskviewData
 )
 
 // Client => Server messages [1001, +inf]
@@ -18,6 +19,7 @@ const (
 	WSMSgClientReqSchedhookCapStart
 	WSMsgClientReqSchedhookCapEnd
 	WSMsgClientReqVMEDump
+	WSMsgClientReqTaskview
 )
 
 func NewWSMsg(msgType WSMsgType, payload any) (WSMessage, error) {

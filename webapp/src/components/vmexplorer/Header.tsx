@@ -1,34 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { cn } from "@/shadcn/lib/utils";
-import { Link } from "wouter";
-import { ArrowLeft } from "lucide-react";
 import { Badge } from "@/shadcn/components/ui/badge";
-
-type HeaderProps = {
-  pid: string;
-  startTime: string;
-};
-
-function BackLink() {
-  const { t } = useTranslation("vmexplorer");
-
-  return (
-    <div className="flex">
-      <Link
-        href="/"
-        className={cn(
-          "text-mono text-sm rounded-md",
-          "text-slate-500 hover:text-slate-300 hover:bg-zinc-800",
-          "flex items-center gap-1 whitespace-nowrap",
-          "transition-colors",
-        )}
-      >
-        <ArrowLeft size={18} />
-        <span>{t("backToProctree")}</span>
-      </Link>
-    </div>
-  );
-}
+import BackLink from "../shared/BackLink";
 
 type LabelBadgeProps = {
   label: string;
@@ -43,6 +16,11 @@ function LabelBadge({ label, value }: LabelBadgeProps) {
     </Badge>
   );
 }
+
+type HeaderProps = {
+  pid: string;
+  startTime: string;
+};
 
 export default function Header({ pid, startTime }: HeaderProps) {
   const { t } = useTranslation("vmexplorer");

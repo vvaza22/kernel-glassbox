@@ -26,12 +26,14 @@ type handler struct {
 	proctree  ProctreeManager
 	schedhook SchedhookManager
 	vme       VMExplorerManager
+	taskview  TaskviewManager
 }
 
 type HandlerParams struct {
 	Proctree  ProctreeManager
 	Schedhook SchedhookManager
 	VME       VMExplorerManager
+	Taskview  TaskviewManager
 }
 
 func NewHandler(ctx *model.WSContext, params *HandlerParams) Handler {
@@ -41,6 +43,7 @@ func NewHandler(ctx *model.WSContext, params *HandlerParams) Handler {
 		proctree:  params.Proctree,
 		schedhook: params.Schedhook,
 		vme:       params.VME,
+		taskview:  params.Taskview,
 	}
 }
 
@@ -65,6 +68,14 @@ func (h *handler) OnClientMessage(msg model.WSMessage) {
 			return
 		}
 		h.handleVMEDump(req)
+	case model.WSMsgClientReqTaskview:
+		req := model.TaskKey{}
+		err := json.Unmarshal(msg.Payload, &req)
+		if err != nil {
+			// TODO: Send error message back to client
+			return
+		}
+		h.handleTaskView(req)
 	default:
 	}
 }
@@ -112,6 +123,18 @@ func (h *handler) handleProctreeDump() {
 		return
 	}
 	respMsg, err := model.NewWSMsg(model.WSMsgSrvProctreeDump, nodes)
+	if err != nil {
+		return
+	}
+	h.sendMessage(respMsg)
+}
+
+func (h *handler) handleTaskView(key model.TaskKey) {
+	data, err := h.taskview.View(key)
+	if err != nil {
+		return
+	}
+	respMsg, err := model.NewWSMsg(model.WSMsgSrvTaskviewData, data)
 	if err != nil {
 		return
 	}

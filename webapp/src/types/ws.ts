@@ -4,12 +4,14 @@ export enum WSMsgType {
   WSMsgSrvProctreeDump,
   WSMsgSrvSchedhookCap,
   WSMsgSrvVMEDump,
+  WSMsgSrvTaskviewData,
 
   // Client => Server messages [1001, +inf]
   WSMsgClientReqProctreeDump = 1001,
   WSMSgClientReqSchedhookCapStart,
   WSMsgClientReqSchedhookCapEnd,
   WSMsgClientReqVMEDump,
+  WSMsgClientReqTaskview,
 }
 
 export interface WSMessage {
