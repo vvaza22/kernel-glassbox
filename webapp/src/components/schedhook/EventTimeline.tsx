@@ -23,13 +23,13 @@ function normTimestamp(ts: bigint): number {
 }
 
 function toClassName(ev: SchedTask): string {
-  if (ev.key.pid === 0) {
-    return "!bg-neutral-500 !opacity-50 hover:!opacity-100 !border !border-gray-900";
+  if (ev.key.pid === "0") {
+    return "!bg-yellow-950 hover:!bg-yellow-900 !text-yellow-300 !border !border-yellow-800";
   }
   if (ev.kthread) {
-    return "!bg-red-400 !opacity-50 hover:!opacity-100 !border !border-red-900";
+    return "!bg-red-950 hover:!bg-red-900 !text-red-300 !border !border-red-800";
   }
-  return "!bg-blue-400 !opacity-50 hover:!opacity-100 !border !border-blue-900";
+  return "!bg-blue-950 hover:!bg-blue-900 !text-blue-300 !border !border-blue-800";
 }
 
 function toDataItems(events: SchedTask[]): DataItem[] {
@@ -48,9 +48,9 @@ export default function EventTimeline({ events }: EventTimelineProps) {
   return (
     <div
       className={cn(
-        "w-full h-[300px]",
+        "w-full",
         "flex items-center justify-center",
-        "border border-border rounded",
+        events.length === 0 ? "border border-border rounded h-64" : "",
       )}
     >
       {events.length === 0 ? (

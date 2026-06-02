@@ -8,6 +8,11 @@
   border: none !important;
 }
 
+.vis-labelset .vis-label {
+  display: flex !important;
+  align-items: center !important;
+}
+
 .vis-panel.vis-left,
 .vis-panel.vis-center {
   border: none !important;
