@@ -32,6 +32,9 @@ export default function VisTimeline({ items, groups }: VisTimelineProps) {
         delay: 0,
         followMouse: true,
       },
+      xss: {
+        disabled: true,
+      },
       stack: false,
     });
 

@@ -1,8 +1,11 @@
+import { type ReactNode } from "react";
 import type { DataItem } from "vis-timeline";
 import type { SchedEvent } from "@/types/ui/schedhook";
 import type { GroupItem } from "@/components/schedhook/VisTimeline";
 import VisTimeline from "@/components/schedhook/VisTimeline";
 import { cn } from "@/shadcn/lib/utils";
+import { renderToStaticMarkup } from "react-dom/server";
+import { SearchCode } from "lucide-react";
 
 type EventTimelineProps = {
   events: SchedEvent[];
@@ -32,14 +35,41 @@ function toClassName(ev: SchedEvent): string {
   return "!bg-blue-950 hover:!bg-blue-900 !text-blue-300 !border !border-blue-800";
 }
 
+function TooltipItem({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex justify-between w-full">
+      <span className="text-sm font-mono text-muted-foreground">{label}:</span>
+      <span className="text-sm font-mono text-foreground">{value}</span>
+    </div>
+  );
+}
+
+function toTooltip(ev: SchedEvent): ReactNode {
+  return (
+    <div
+      className={cn(
+        "p-2 w-[400px]",
+        "border border-border",
+        "flex flex-col gap-2",
+        "bg-zinc-950",
+      )}
+    >
+      <TooltipItem label="Comm" value={ev.name} />
+      <TooltipItem label="Interval" value={`[${ev.start}, ${ev.end})`} />
+      <TooltipItem label="Duration" value={`${ev.duration} ns`} />
+      <TooltipItem label="PID" value={ev.key.pid} />
+    </div>
+  );
+}
+
 function toDataItems(events: SchedEvent[]): DataItem[] {
   return events.map((ev, index) => ({
     id: index,
     group: ev.cpu,
-    content: `${ev.name} (PID: ${ev.key.pid})`,
+    content: ev.name,
     start: normTimestamp(ev.startNorm),
     end: normTimestamp(ev.endNorm),
-    title: `Interval: [${ev.start}, ${ev.end}) Duration: ${ev.duration} ns`,
+    title: renderToStaticMarkup(toTooltip(ev)),
     className: toClassName(ev),
   }));
 }

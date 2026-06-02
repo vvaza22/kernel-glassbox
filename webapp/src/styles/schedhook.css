@@ -6,6 +6,7 @@
 
 .vis-timeline {
   border: none !important;
+  overflow: visible !important;
 }
 
 .vis-labelset .vis-label {
@@ -25,4 +26,11 @@
 
 .vis-labelset .vis-inner {
   @apply !font-mono !text-white;
+}
+
+.vis-tooltip {
+  background: none !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
 }
