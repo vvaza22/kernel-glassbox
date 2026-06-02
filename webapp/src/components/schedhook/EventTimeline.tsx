@@ -50,13 +50,18 @@ export default function EventTimeline({ events }: EventTimelineProps) {
       className={cn(
         "w-full",
         "flex items-center justify-center",
-        events.length === 0 ? "border border-border rounded h-64" : "",
+        events.length === 0 ? "border border-border rounded-md h-64" : "",
       )}
     >
       {events.length === 0 ? (
-        <p className="text-mono text-md">
-          Press <b>Start Capture</b>, wait few seconds and press{" "}
-          <b>End capture</b> to display the captured events
+        <p className="flex flex-col items-center justify-center gap-2">
+          <span className="text-foreground text-mono">
+            <b>Start Capture</b> - Begins capturing scheduler events
+          </span>
+          <span className="text-foreground text-mono">
+            <b>End Capture</b> - Ends capture and displays events on the
+            timeline
+          </span>
         </p>
       ) : (
         <VisTimeline
