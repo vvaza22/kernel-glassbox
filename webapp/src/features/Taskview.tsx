@@ -2,7 +2,7 @@ import useTaskview from "@/hooks/taskview";
 import { useEffect } from "react";
 import { useParams } from "wouter";
 import { useTranslation } from "react-i18next";
-import Loader from "@/components/ui/Loader";
+import Loader from "@/components/shared/Loader";
 import View from "@/components/taskview/View";
 
 export default function Taskview() {

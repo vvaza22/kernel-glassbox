@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import useProctree from "@/hooks/proctree";
-import Loader from "@/components/ui/Loader";
+import Loader from "@/components/shared/Loader";
 import "@xyflow/react/dist/style.css";
 import "@/styles/proctree.css";
 import Viewer from "@/components/proctree/Viewer";
