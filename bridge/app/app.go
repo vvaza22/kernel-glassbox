@@ -19,6 +19,7 @@ type app struct {
 	proctreeManager  ProctreeManager
 	schedhookManager SchedhookManager
 	vmeManager       VMExplorerManager
+	taskviewManager  TaskviewManager
 }
 
 func NewApp(nl nlclient.NetlinkClient) App {
@@ -28,6 +29,7 @@ func NewApp(nl nlclient.NetlinkClient) App {
 		proctreeManager:  NewProctreeManager(nl.Proctree()),
 		schedhookManager: NewSchedhookManager(nl.Schedhook()),
 		vmeManager:       NewVMExplorerManager(nl.VMExplorer()),
+		taskviewManager:  NewTaskviewManager(nl.Taskview()),
 	}
 }
 
@@ -39,6 +41,7 @@ func (a *app) AddClient(wsCtx *model.WSContext) ClientMessageListener {
 		Proctree:  a.proctreeManager,
 		Schedhook: a.schedhookManager,
 		VME:       a.vmeManager,
+		Taskview:  a.taskviewManager,
 	})
 	a.clients[handler.ID()] = handler
 

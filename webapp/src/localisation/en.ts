@@ -2,8 +2,13 @@ export const en = {
   proctree: {
     loading: "Loading process tree...",
   },
+  taskview: {
+    explorePageTables: "Explore Page Tables",
+    loading: "Loading task view...",
+  },
   vmexplorer: {
     backToProctree: "Process Tree",
+    taskviewButton: "Task View",
     title: "Virtual Memory Explorer",
     pidBadge: "pid:",
     startTimeBadge: "start_time:",
