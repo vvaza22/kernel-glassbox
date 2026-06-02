@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useWSStore } from "@/stores/ws";
 import { WSMsgType, WSStatus } from "@/types/ws";
 import { debug, error } from "@/helpers/logger";
-import { isProctreeNodeArray } from "@/types/ws/proctree";
+import { isWebsocketProctreeDump } from "@/types/ws/proctree";
 import type { TreeNode } from "@/types/ui/proctree";
 import { toTreeNodes } from "@/adapters/proctree";
 
@@ -14,24 +14,26 @@ export default function useProctree() {
   // Was the first message received?
   const [loaded, setLoaded] = useState(false);
   const [nodes, setNodes] = useState<TreeNode[]>([]);
+  const [timeFormatted, setTimeFormatted] = useState("");
+  const [paused, setPaused] = useState(false);
 
   const handler = (data: unknown) => {
-    if (!isProctreeNodeArray(data)) {
+    if (!isWebsocketProctreeDump(data)) {
       error("Received invalid proctree data:", data);
       return;
     }
 
-    const newNodes = toTreeNodes(data);
+    const newNodes = toTreeNodes(data.nodes);
     debug("Transformed proctree dump data:", newNodes);
     setNodes(newNodes);
+    setTimeFormatted(data.timeFormatted);
 
     // The initial data was received
-    setTimeout(() => {
-      setLoaded(true);
-    }, 1000);
+    setLoaded(true);
   };
 
   useEffect(() => {
+    if (paused) return;
     if (status !== WSStatus.Connected) return;
     const unsubscribe = subscribe(WSMsgType.WSMsgSrvProctreeDump, handler);
 
@@ -43,7 +45,7 @@ export default function useProctree() {
     return () => {
       unsubscribe();
     };
-  }, [status, subscribe, send]);
+  }, [status, subscribe, paused, send]);
 
-  return { loaded, nodes };
+  return { loaded, paused, setPaused, nodes, timeFormatted };
 }

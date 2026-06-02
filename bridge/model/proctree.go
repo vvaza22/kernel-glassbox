@@ -50,3 +50,8 @@ func ToWebsocketProctreeNode(node ProctreeNode) WebsocketProctreeNode {
 		IsKthread:   node.IsKthread,
 	}
 }
+
+type WebsocketProctreeDump struct {
+	Nodes         []WebsocketProctreeNode `json:"nodes"`
+	TimeFormatted string                  `json:"timeFormatted"`
+}

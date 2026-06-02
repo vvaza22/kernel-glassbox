@@ -26,3 +26,19 @@ export function isProctreeNode(obj: any): obj is ProctreeNode {
 export function isProctreeNodeArray(obj: any): obj is ProctreeNode[] {
   return Array.isArray(obj) && obj.every((item) => isProctreeNode(item));
 }
+
+export type WebsocketProctreeDump = {
+  nodes: ProctreeNode[];
+  timeFormatted: string;
+};
+
+export function isWebsocketProctreeDump(
+  obj: any,
+): obj is WebsocketProctreeDump {
+  return (
+    obj !== null &&
+    typeof obj === "object" &&
+    isProctreeNodeArray(obj.nodes) &&
+    typeof obj.timeFormatted === "string"
+  );
+}
