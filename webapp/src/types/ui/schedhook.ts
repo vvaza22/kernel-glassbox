@@ -1,6 +1,6 @@
 import type { WebsocketTaskKey } from "../ws/shared";
 
-export type SchedTask = {
+export type SchedEvent = {
   key: WebsocketTaskKey;
   name: string;
   cpu: number;

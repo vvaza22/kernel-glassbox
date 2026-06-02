@@ -2,21 +2,23 @@ import { useEffect, useState } from "react";
 import { useWSStore } from "@/stores/ws";
 import { WSMsgType, WSStatus } from "@/types/ws";
 import { error } from "@/helpers/logger";
-import { isSchedCap, type WebsocketSchedEvent } from "@/types/ws/schedhook";
+import { isSchedCap } from "@/types/ws/schedhook";
+import type { SchedEvent } from "@/types/ui/schedhook";
+import { toSchedEvents } from "@/adapters/schedhook";
 
 export default function useSchedhook() {
   const subscribe = useWSStore((s) => s.subscribe);
   const send = useWSStore((s) => s.send);
   const status = useWSStore((s) => s.status);
 
-  const [events, setEvents] = useState<WebsocketSchedEvent[]>([]);
+  const [events, setEvents] = useState<SchedEvent[]>([]);
 
   const handler = (data: unknown) => {
     if (!isSchedCap(data)) {
       error("Received invalid schedhook capture data", data);
       return;
     }
-    setEvents(data.events);
+    setEvents(toSchedEvents(data.events));
   };
 
   const startCapture = () => {

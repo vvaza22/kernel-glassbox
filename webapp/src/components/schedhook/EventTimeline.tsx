@@ -1,14 +1,14 @@
 import type { DataItem } from "vis-timeline";
-import type { SchedTask } from "@/types/ui/schedhook";
+import type { SchedEvent } from "@/types/ui/schedhook";
 import type { GroupItem } from "@/components/schedhook/VisTimeline";
 import VisTimeline from "@/components/schedhook/VisTimeline";
 import { cn } from "@/shadcn/lib/utils";
 
 type EventTimelineProps = {
-  events: SchedTask[];
+  events: SchedEvent[];
 };
 
-function toGroupItems(events: SchedTask[]): GroupItem[] {
+function toGroupItems(events: SchedEvent[]): GroupItem[] {
   const cpuSet = new Set<number>(events.map((ev) => ev.cpu));
   return Array.from(cpuSet)
     .sort()
@@ -22,7 +22,7 @@ function normTimestamp(ts: bigint): number {
   return Number(BigInt(ts));
 }
 
-function toClassName(ev: SchedTask): string {
+function toClassName(ev: SchedEvent): string {
   if (ev.key.pid === "0") {
     return "!bg-yellow-950 hover:!bg-yellow-900 !text-yellow-300 !border !border-yellow-800";
   }
@@ -32,7 +32,7 @@ function toClassName(ev: SchedTask): string {
   return "!bg-blue-950 hover:!bg-blue-900 !text-blue-300 !border !border-blue-800";
 }
 
-function toDataItems(events: SchedTask[]): DataItem[] {
+function toDataItems(events: SchedEvent[]): DataItem[] {
   return events.map((ev, index) => ({
     id: index,
     group: ev.cpu,

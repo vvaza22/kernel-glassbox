@@ -1,7 +1,6 @@
 import { Button } from "@/shadcn/components/ui/button";
 import useSchedhook from "@/hooks/schedhook";
 import EventTimeline from "@/components/schedhook/EventTimeline";
-import { toSchedTasks } from "@/adapters/schedhook";
 import "@/styles/schedhook.css";
 import BackLink from "@/components/shared/BackLink";
 
@@ -35,7 +34,7 @@ export default function Schedhook() {
         </div>
       </div>
       <div className="mt-6">
-        <EventTimeline events={toSchedTasks(events)} />
+        <EventTimeline events={events} />
       </div>
     </div>
   );

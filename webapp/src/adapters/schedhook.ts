@@ -1,11 +1,11 @@
 import type { WebsocketSchedEvent } from "@/types/ws/schedhook";
-import type { SchedTask } from "@/types/ui/schedhook";
+import type { SchedEvent } from "@/types/ui/schedhook";
 import { bigIntComparator } from "@/helpers/math";
 
 function toSchedTask(
   cur: WebsocketSchedEvent,
   next: WebsocketSchedEvent,
-): SchedTask {
+): SchedEvent {
   const curTimestamp = BigInt(cur.timestamp);
   const nextTimestamp = BigInt(next.timestamp);
   return {
@@ -21,8 +21,8 @@ function toSchedTask(
   };
 }
 
-function toSchedTaskPerCPU(events: WebsocketSchedEvent[]): SchedTask[] {
-  const result: SchedTask[] = [];
+function toSchedTaskPerCPU(events: WebsocketSchedEvent[]): SchedEvent[] {
+  const result: SchedEvent[] = [];
 
   if (events.length === 0) {
     return result;
@@ -40,8 +40,8 @@ function toSchedTaskPerCPU(events: WebsocketSchedEvent[]): SchedTask[] {
   return result;
 }
 
-export function toSchedTasks(events: WebsocketSchedEvent[]): SchedTask[] {
-  const result: SchedTask[] = [];
+export function toSchedEvents(events: WebsocketSchedEvent[]): SchedEvent[] {
+  const result: SchedEvent[] = [];
   const byCPU = new Map<number, WebsocketSchedEvent[]>();
 
   if (events.length === 0) {
