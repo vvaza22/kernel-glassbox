@@ -1,6 +1,9 @@
 package model
 
-import "bridge/utils"
+import (
+	"bridge/utils"
+	"fmt"
+)
 
 type SchedEvent struct {
 	Prev          TaskKey `json:"prev"`
@@ -30,4 +33,32 @@ func ReadSchedEvent(parser utils.ByteParser) (SchedEvent, error) {
 
 type SchedCap struct {
 	Events []SchedEvent `json:"events"`
+}
+
+type WebsocketSchedEvent struct {
+	Prev          WebsocketTaskKey `json:"prev"`
+	Next          WebsocketTaskKey `json:"next"`
+	CommPrev      string           `json:"commPrev"`
+	CommNext      string           `json:"commNext"`
+	Timestamp     string           `json:"timestamp"`
+	CPU           int32            `json:"cpu"`
+	PrevIsKthread bool             `json:"prevIsKthread"`
+	NextIsKthread bool             `json:"nextIsKthread"`
+}
+
+type WebsocketSchedCap struct {
+	Events []WebsocketSchedEvent `json:"events"`
+}
+
+func ToWebsocketSchedEvent(event SchedEvent) WebsocketSchedEvent {
+	return WebsocketSchedEvent{
+		Prev:          ToWebsocketTaskKey(event.Prev),
+		Next:          ToWebsocketTaskKey(event.Next),
+		CommPrev:      event.CommPrev,
+		CommNext:      event.CommNext,
+		Timestamp:     fmt.Sprintf("%d", event.Timestamp),
+		CPU:           event.CPU,
+		PrevIsKthread: event.PrevIsKthread,
+		NextIsKthread: event.NextIsKthread,
+	}
 }

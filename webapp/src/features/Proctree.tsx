@@ -5,6 +5,8 @@ import "@xyflow/react/dist/style.css";
 import Viewer from "@/components/proctree/Viewer";
 import { cn } from "@/shadcn/lib/utils";
 import { PauseCircle, PlayCircle } from "lucide-react";
+import { Button } from "@/shadcn/components/ui/button";
+import { Link } from "wouter";
 
 export default function Proctree() {
   const { t } = useTranslation("proctree");
@@ -16,6 +18,13 @@ export default function Proctree() {
 
   return loaded ? (
     <div className="w-full h-full">
+      <div className={cn("fixed top-0 right-0 p-4 z-100")}>
+        <Link href="/schedhook">
+          <Button variant="outline" className="cursor-pointer">
+            Scheduler Visualizer
+          </Button>
+        </Link>
+      </div>
       <div
         className={cn("fixed top-0 left-0", "p-4 bg-background/50", "z-100")}
       >

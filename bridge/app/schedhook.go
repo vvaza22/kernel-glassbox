@@ -9,7 +9,7 @@ import (
 
 type SchedhookManager interface {
 	Start() error
-	End() (*model.SchedCap, error)
+	End() (*model.WebsocketSchedCap, error)
 }
 
 type schedhookManager struct {
@@ -30,10 +30,18 @@ func (m *schedhookManager) Start() error {
 	return nil
 }
 
-func (m *schedhookManager) End() (*model.SchedCap, error) {
+func (m *schedhookManager) End() (*model.WebsocketSchedCap, error) {
 	cap, err := m.schedhookClient.CapEnd()
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to end capture")
 	}
-	return cap, nil
+
+	wsEvents := make([]model.WebsocketSchedEvent, len(cap.Events))
+	for i, event := range cap.Events {
+		wsEvents[i] = model.ToWebsocketSchedEvent(event)
+	}
+
+	return &model.WebsocketSchedCap{
+		Events: wsEvents,
+	}, nil
 }
