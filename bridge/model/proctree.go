@@ -11,6 +11,7 @@ type ProctreeNode struct {
 	GroupLeader TaskKey `json:"groupLeader"`
 	Self        TaskKey `json:"self"`
 	Name        string  `json:"name"`
+	IsKthread   bool    `json:"isKthread"`
 }
 
 func (n ProctreeNode) String() string {
@@ -25,6 +26,7 @@ func ReadProctreeNode(parser utils.ByteParser) (ProctreeNode, error) {
 	node.GroupLeader, _ = ReadTaskKey(parser)
 	node.Self, _ = ReadTaskKey(parser)
 	node.Name = parser.ReadString(16)
+	node.IsKthread = parser.ReadBool()
 
 	return node, parser.Error()
 }
@@ -35,6 +37,7 @@ type WebsocketProctreeNode struct {
 	GroupLeader WebsocketTaskKey `json:"groupLeader"`
 	Self        WebsocketTaskKey `json:"self"`
 	Name        string           `json:"name"`
+	IsKthread   bool             `json:"isKthread"`
 }
 
 func ToWebsocketProctreeNode(node ProctreeNode) WebsocketProctreeNode {
@@ -44,5 +47,6 @@ func ToWebsocketProctreeNode(node ProctreeNode) WebsocketProctreeNode {
 		GroupLeader: ToWebsocketTaskKey(node.GroupLeader),
 		Self:        ToWebsocketTaskKey(node.Self),
 		Name:        node.Name,
+		IsKthread:   node.IsKthread,
 	}
 }

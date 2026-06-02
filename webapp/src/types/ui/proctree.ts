@@ -2,6 +2,7 @@ export type SubTreeNode = {
   id: string;
   name: string;
   pid: string;
+  startTime: string;
 };
 
 export type TreeNode = {
@@ -13,6 +14,7 @@ export type TreeNode = {
   name: string;
   pid: string;
   startTime: string;
+  isKthread: boolean;
   subNodes: SubTreeNode[];
   childTreeNodeIds: string[];
 };
@@ -27,6 +29,7 @@ export type LeaderNodeData = {
   name: string;
   pid: string;
   startTime: string;
+  isKthread: boolean;
   numSubNodes: number;
   hasChildren: boolean;
   expanded: boolean;
@@ -36,4 +39,5 @@ export type LeaderNodeData = {
 export type SubNodeData = {
   name: string;
   pid: string;
+  startTime: string;
 };

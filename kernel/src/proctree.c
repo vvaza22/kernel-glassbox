@@ -43,6 +43,7 @@ static void gb_proctree_read_task(struct gb_proctree_node *node,
 	/* self */
 	node->self.pid = task->pid;
 	node->self.start_time = task->start_time;
+	node->is_kthread = task->flags & PF_KTHREAD;
 
 	/* task name */
 

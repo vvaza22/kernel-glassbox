@@ -7,6 +7,7 @@ export type ProctreeNode = {
   groupLeader: WebsocketTaskKey;
   self: WebsocketTaskKey;
   name: string;
+  isKthread: boolean;
 };
 
 export function isProctreeNode(obj: any): obj is ProctreeNode {
@@ -17,6 +18,7 @@ export function isProctreeNode(obj: any): obj is ProctreeNode {
     isWebsocketTaskKey(obj.realParent) &&
     isWebsocketTaskKey(obj.groupLeader) &&
     isWebsocketTaskKey(obj.self) &&
+    typeof obj.isKthread === "boolean" &&
     typeof obj.name === "string"
   );
 }

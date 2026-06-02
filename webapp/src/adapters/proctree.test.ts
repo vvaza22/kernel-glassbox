@@ -14,6 +14,7 @@ const rootTreeNode: TreeNode = {
   parentTreeNodeId: "",
   name: "swapper/0",
   pid: "0",
+  isKthread: true,
   startTime: "0",
   subNodes: [],
   childTreeNodeIds: [],
@@ -28,13 +29,14 @@ describe("toTreeNodes", () => {
     const keyA: WebsocketTaskKey = { pid: "1", startTime: "100" };
     const keyB: WebsocketTaskKey = { pid: "2", startTime: "200" };
 
-    const nodes = [
+    const nodes: ProctreeNode[] = [
       {
         parent: fakeKey,
         realParent: rootKey,
         groupLeader: keyA,
         self: keyA,
         name: "A",
+        isKthread: false,
       },
       {
         parent: fakeKey,
@@ -42,6 +44,7 @@ describe("toTreeNodes", () => {
         groupLeader: keyB,
         self: keyB,
         name: "B",
+        isKthread: false,
       },
     ];
 
@@ -57,6 +60,7 @@ describe("toTreeNodes", () => {
         name: "A",
         pid: keyA.pid,
         startTime: keyA.startTime,
+        isKthread: false,
         subNodes: [],
         childTreeNodeIds: [],
       },
@@ -67,6 +71,7 @@ describe("toTreeNodes", () => {
         name: "B",
         pid: keyB.pid,
         startTime: keyB.startTime,
+        isKthread: false,
         subNodes: [],
         childTreeNodeIds: [],
       },
@@ -85,6 +90,7 @@ describe("toTreeNodes", () => {
         groupLeader: keyA,
         self: keyA,
         name: "A",
+        isKthread: false,
       },
       {
         parent: fakeKey,
@@ -92,6 +98,7 @@ describe("toTreeNodes", () => {
         groupLeader: keyA,
         self: { pid: "11", startTime: "110" },
         name: "A1",
+        isKthread: false,
       },
       {
         parent: fakeKey,
@@ -99,6 +106,7 @@ describe("toTreeNodes", () => {
         groupLeader: keyB,
         self: keyB,
         name: "B",
+        isKthread: false,
       },
       {
         parent: fakeKey,
@@ -106,6 +114,7 @@ describe("toTreeNodes", () => {
         groupLeader: keyB,
         self: { pid: "21", startTime: "210" },
         name: "B1",
+        isKthread: false,
       },
       {
         parent: fakeKey,
@@ -113,6 +122,7 @@ describe("toTreeNodes", () => {
         groupLeader: keyB,
         self: { pid: "22", startTime: "220" },
         name: "B2",
+        isKthread: false,
       },
     ];
     const expectedNodes: TreeNode[] = [
@@ -127,11 +137,13 @@ describe("toTreeNodes", () => {
         name: "A",
         pid: keyA.pid,
         startTime: keyA.startTime,
+        isKthread: false,
         subNodes: [
           {
             id: "11-110",
             name: "A1",
             pid: "11",
+            startTime: "110",
           },
         ],
         childTreeNodeIds: [],
@@ -143,16 +155,19 @@ describe("toTreeNodes", () => {
         name: "B",
         pid: keyB.pid,
         startTime: keyB.startTime,
+        isKthread: false,
         subNodes: [
           {
             id: "21-210",
             name: "B1",
             pid: "21",
+            startTime: "210",
           },
           {
             id: "22-220",
             name: "B2",
             pid: "22",
+            startTime: "220",
           },
         ],
         childTreeNodeIds: [],
@@ -177,6 +192,7 @@ describe("toTreeNodes", () => {
         groupLeader: keyA,
         self: keyA,
         name: "A",
+        isKthread: false,
       },
       {
         parent: fakeKey,
@@ -184,6 +200,7 @@ describe("toTreeNodes", () => {
         groupLeader: keyB,
         self: keyB,
         name: "B",
+        isKthread: false,
       },
       {
         parent: fakeKey,
@@ -191,6 +208,7 @@ describe("toTreeNodes", () => {
         groupLeader: keyC,
         self: keyC,
         name: "C",
+        isKthread: false,
       },
       {
         parent: fakeKey,
@@ -198,6 +216,7 @@ describe("toTreeNodes", () => {
         groupLeader: keyD,
         self: keyD,
         name: "D",
+        isKthread: false,
       },
       {
         parent: fakeKey,
@@ -205,6 +224,7 @@ describe("toTreeNodes", () => {
         groupLeader: keyD,
         self: keyD1,
         name: "D1",
+        isKthread: false,
       },
       {
         parent: fakeKey,
@@ -212,6 +232,7 @@ describe("toTreeNodes", () => {
         groupLeader: keyE,
         self: keyE,
         name: "E",
+        isKthread: false,
       },
       {
         parent: fakeKey,
@@ -219,6 +240,7 @@ describe("toTreeNodes", () => {
         groupLeader: keyF,
         self: keyF,
         name: "F",
+        isKthread: false,
       },
     ];
 
@@ -238,6 +260,7 @@ describe("toTreeNodes", () => {
       name: "A",
       pid: keyA.pid,
       startTime: keyA.startTime,
+      isKthread: false,
       subNodes: [],
       childTreeNodeIds: ["2-200"],
     });
@@ -249,6 +272,7 @@ describe("toTreeNodes", () => {
       name: "B",
       pid: keyB.pid,
       startTime: keyB.startTime,
+      isKthread: false,
       subNodes: [],
       childTreeNodeIds: [],
     });
@@ -260,6 +284,7 @@ describe("toTreeNodes", () => {
       name: "C",
       pid: keyC.pid,
       startTime: keyC.startTime,
+      isKthread: false,
       subNodes: [],
       childTreeNodeIds: ["40-4000"],
     });
@@ -271,11 +296,13 @@ describe("toTreeNodes", () => {
       name: "D",
       pid: keyD.pid,
       startTime: keyD.startTime,
+      isKthread: false,
       subNodes: [
         {
           id: "41-4100",
           name: "D1",
           pid: keyD1.pid,
+          startTime: keyD1.startTime,
         },
       ],
       childTreeNodeIds: ["5-500", "6-600"],
@@ -288,6 +315,7 @@ describe("toTreeNodes", () => {
       name: "E",
       pid: keyE.pid,
       startTime: keyE.startTime,
+      isKthread: false,
       subNodes: [],
       childTreeNodeIds: [],
     });
@@ -299,6 +327,7 @@ describe("toTreeNodes", () => {
       name: "F",
       pid: keyF.pid,
       startTime: keyF.startTime,
+      isKthread: false,
       subNodes: [],
       childTreeNodeIds: [],
     });

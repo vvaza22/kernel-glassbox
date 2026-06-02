@@ -33,6 +33,7 @@ import {
   NODE_POS_EQUALITY_THRESHOLD,
 } from "@/config/proctree";
 import { Link } from "wouter";
+import { Badge } from "@/shadcn/components/ui/badge";
 
 function verticalSpacer(numChildren: number) {
   return (
@@ -62,15 +63,28 @@ function SubNode({ data }: NodeProps<Node<SubNodeData>>) {
         "hover:bg-accent/50 hover:text-accent-foreground cursor-pointer",
       )}
     >
-      <div className="truncate w-full text-sm">{data.name}</div>
-      <span
-        className={cn(
-          "inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-mono leading-none",
-          "border-border bg-muted text-muted-foreground whitespace-nowrap",
-        )}
-      >
-        PID {data.pid}
-      </span>
+      <div className="flex justify-between items-center w-full">
+        <div className="flex justify-start items-center gap-1">
+          <Badge
+            variant="outline"
+            className="bg-zinc-900 text-sm font-mono text-muted-foreground"
+          >
+            {data.pid}
+          </Badge>
+          <div className="truncate w-full text-sm">{data.name}</div>
+        </div>
+        <Link href={`/view/${data.pid}/${data.startTime}`}>
+          <button
+            className={cn(
+              "p-1 cursor-pointer",
+              "transition-colors",
+              "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            <SearchCode className="w-4 h-4" />
+          </button>
+        </Link>
+      </div>
       <Handle
         type="source"
         position={Position.Right}
@@ -92,8 +106,9 @@ function LeaderNode({ data }: NodeProps<Node<LeaderNodeData>>) {
       }}
       className={cn(
         "relative",
-        "border border-border rounded-lg shadow-md",
+        "border rounded-lg shadow-md",
         "bg-card text-card-foreground bg-muted/10",
+        data.isKthread ? "border-red-400/30" : "border-blue-400/30",
       )}
     >
       {!isRoot && (
@@ -107,25 +122,28 @@ function LeaderNode({ data }: NodeProps<Node<LeaderNodeData>>) {
       <div
         className={cn(
           "w-full h-[50px] flex items-center justify-between px-3",
-          "bg-muted/30",
-          data.numSubNodes > 0
-            ? "border-b border-border rounded-t-lg"
-            : "rounded-lg",
+          data.isKthread ? "bg-red-950/30" : "bg-blue-950/30",
+          data.numSubNodes > 0 ? "border-b  rounded-t-lg" : "rounded-lg",
         )}
       >
         <div className="flex items-center gap-1">
-          <span
+          <Badge
             className={cn(
-              "flex items-center justify-center",
-              "px-1.5 py-0.5",
-              "border border-border rounded-full",
-              "text-[10px] font-mono leading-none",
-              "bg-background text-muted-foreground whitespace-nowrap",
+              "font-mono font-semibold text-[12px] whitespace-nowrap",
+              "px-2 py-0.5",
+              data.isKthread
+                ? "bg-red-950 text-red-300"
+                : "bg-blue-950 text-blue-300",
             )}
           >
-            PID {data.pid}
-          </span>
-          <div className="truncate font-mono text-sm font-semibold">
+            <span>{data.pid}</span>
+          </Badge>
+          <div
+            className={cn(
+              "truncate font-mono text-sm font-semibold",
+              data.isKthread ? "text-red-300" : "text-blue-300",
+            )}
+          >
             {data.name}
           </div>
         </div>
@@ -136,7 +154,10 @@ function LeaderNode({ data }: NodeProps<Node<LeaderNodeData>>) {
               <button
                 className={cn(
                   "p-1 rounded-md cursor-pointer",
-                  "hover:bg-accent hover:text-accent-foreground",
+                  "transition-colors",
+                  data.isKthread
+                    ? "text-red-300 hover:bg-red-950 hover:text-red-200"
+                    : "text-blue-300 hover:bg-blue-950 hover:text-blue-200",
                 )}
               >
                 <SearchCode className="w-4 h-4" />
@@ -146,7 +167,10 @@ function LeaderNode({ data }: NodeProps<Node<LeaderNodeData>>) {
               <button
                 className={cn(
                   "p-1 rounded-md cursor-pointer",
-                  "hover:bg-accent hover:text-accent-foreground",
+                  "transition-colors",
+                  data.isKthread
+                    ? "text-red-300 hover:bg-red-950 hover:text-red-200"
+                    : "text-blue-300 hover:bg-blue-950 hover:text-blue-200",
                 )}
               >
                 <Network className="w-4 h-4" />
@@ -161,21 +185,31 @@ function LeaderNode({ data }: NodeProps<Node<LeaderNodeData>>) {
           type="source"
           position={Position.Bottom}
           className={cn(
-            "!w-6 !h-6 !flex !items-center !justify-center !cursor-pointer",
-            "!bg-background !border-muted-foreground !border-1",
+            "!w-6 !h-6",
+            "!flex !items-center !justify-center !cursor-pointer",
+            "!border-1",
+            data.isKthread
+              ? "!bg-zinc-900 !border-red-800"
+              : "!bg-zinc-900 !border-blue-800",
           )}
           onPointerDown={(e) => {
             e.stopPropagation();
             data.onExpandToggle(data.id);
           }}
         >
-          <span className="text-foreground text-sm pointer-events-none">
+          <div
+            className={cn(
+              "text-sm pointer-events-none",
+              data.isKthread ? "text-red-400" : "text-blue-400",
+            )}
+          >
             {data.expanded ? (
               <Minus className="w-3 h-3" />
             ) : (
               <Plus className="w-3 h-3" />
             )}
-          </span>
+          </div>
+          <span className="text-foreground text-sm pointer-events-none"></span>
         </Handle>
       )}
     </div>

@@ -69,6 +69,7 @@ const toSubTreeNode = (node: ProctreeNode): SubTreeNode => ({
   id: toId(node.self),
   name: node.name,
   pid: node.self.pid,
+  startTime: node.self.startTime,
 });
 
 /**
@@ -90,6 +91,7 @@ export function toTreeNodes(nodes: ProctreeNode[]): TreeNode[] {
     name: "swapper/0",
     pid: "0",
     startTime: "0",
+    isKthread: true,
     subNodes: [],
     childTreeNodeIds: tgidToChildTgids.get(kernelId) || [],
   };
@@ -106,6 +108,7 @@ export function toTreeNodes(nodes: ProctreeNode[]): TreeNode[] {
       parentTreeNodeId: realParentTgid,
       name: node.name,
       pid: node.self.pid,
+      isKthread: node.isKthread,
       startTime: node.self.startTime,
       subNodes: subNodes,
       childTreeNodeIds: childTreeNodeIds,
@@ -127,7 +130,7 @@ export function toFlowNodes(
   flowNodes: Node[];
   flowEdges: Edge[];
 } {
-  const flowNodes: Node<LeaderNodeData>[] = treeNodes.map((node) => ({
+  const flowNodes: Node<LeaderNodeData>[] = treeNodes.map((node: TreeNode) => ({
     id: node.id,
     type: "leader",
     data: {
@@ -135,6 +138,7 @@ export function toFlowNodes(
       name: node.name,
       pid: node.pid,
       startTime: node.startTime,
+      isKthread: node.isKthread,
       numSubNodes: node.subNodes.length,
       hasChildren: node.childTreeNodeIds.length > 0,
       expanded: isExpanded(node.id),
@@ -149,12 +153,13 @@ export function toFlowNodes(
   }));
 
   const flowSubNodes: Node<SubNodeData>[] = treeNodes.flatMap((node) => {
-    return node.subNodes.map((subNode, rankIndex) => ({
+    return node.subNodes.map((subNode: SubTreeNode, rankIndex) => ({
       id: subNode.id,
       type: "sub",
       data: {
         name: subNode.name,
         pid: subNode.pid,
+        startTime: subNode.startTime,
       },
       position: {
         x: 0,
@@ -174,6 +179,13 @@ export function toFlowNodes(
       id: `${node.parentId}--${node.id}`,
       source: node.parentId,
       target: node.id,
+      style: {
+        // Note: These are tailwind colors https://tailwindcss.com/docs/colors
+        stroke: node.isKthread
+          ? "oklch(44.4% 0.177 26.899)"
+          : "oklch(37.9% 0.146 265.522)",
+        strokeWidth: 0.7,
+      },
     }));
 
   return {
