@@ -5,7 +5,6 @@ import type { GroupItem } from "@/components/schedhook/VisTimeline";
 import VisTimeline from "@/components/schedhook/VisTimeline";
 import { cn } from "@/shadcn/lib/utils";
 import { renderToStaticMarkup } from "react-dom/server";
-import { SearchCode } from "lucide-react";
 
 type EventTimelineProps = {
   events: SchedEvent[];
