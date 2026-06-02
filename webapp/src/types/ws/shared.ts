@@ -1,13 +1,13 @@
-export type TaskKey = {
-  pid: number;
-  startTime: number;
+export type WebsocketTaskKey = {
+  pid: string;
+  startTime: string;
 };
 
-export function isTaskKey(obj: any): obj is TaskKey {
+export function isWebsocketTaskKey(obj: any): obj is WebsocketTaskKey {
   return (
     obj !== null &&
     typeof obj === "object" &&
-    typeof obj.pid === "number" &&
-    typeof obj.startTime === "number"
+    typeof obj.pid === "string" &&
+    typeof obj.startTime === "string"
   );
 }

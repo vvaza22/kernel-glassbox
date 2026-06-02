@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useWSStore } from "@/stores/ws";
 import { WSMsgType, WSStatus } from "@/types/ws";
 import { error } from "@/helpers/logger";
-import type { TaskKey } from "@/types/ws/shared";
+import type { WebsocketTaskKey } from "@/types/ws/shared";
 import {
   isWebsocketTaskviewData,
   type WebsocketTaskviewData,
@@ -23,7 +23,7 @@ export default function useTaskview() {
     setViewData(data);
   };
 
-  const getView = (key: TaskKey) => {
+  const getView = (key: WebsocketTaskKey) => {
     send({
       type: WSMsgType.WSMsgClientReqTaskview,
       payload: key,

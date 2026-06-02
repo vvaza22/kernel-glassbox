@@ -1,9 +1,9 @@
-import type { TaskKey } from "./shared";
-import { isTaskKey } from "./shared";
+import type { WebsocketTaskKey } from "./shared";
+import { isWebsocketTaskKey } from "./shared";
 
 export type SchedEvent = {
-  prev: TaskKey;
-  next: TaskKey;
+  prev: WebsocketTaskKey;
+  next: WebsocketTaskKey;
   commPrev: string;
   commNext: string;
   timestamp: bigint;
@@ -16,8 +16,8 @@ export function isSchedEvent(obj: any): obj is SchedEvent {
   return (
     obj !== null &&
     typeof obj === "object" &&
-    isTaskKey(obj.prev) &&
-    isTaskKey(obj.next) &&
+    isWebsocketTaskKey(obj.prev) &&
+    isWebsocketTaskKey(obj.next) &&
     typeof obj.commPrev === "string" &&
     typeof obj.commNext === "string" &&
     typeof obj.timestamp === "number" &&

@@ -1,7 +1,7 @@
 export type SubTreeNode = {
   id: string;
   name: string;
-  pid: number;
+  pid: string;
 };
 
 export type TreeNode = {
@@ -11,8 +11,8 @@ export type TreeNode = {
   // parentTreeNodeId always points to a TreeNode
   parentTreeNodeId: string;
   name: string;
-  pid: number;
-  startTime: number;
+  pid: string;
+  startTime: string;
   subNodes: SubTreeNode[];
   childTreeNodeIds: string[];
 };
@@ -25,8 +25,8 @@ export type Pos = {
 export type LeaderNodeData = {
   id: string;
   name: string;
-  pid: number;
-  startTime: number;
+  pid: string;
+  startTime: string;
   numSubNodes: number;
   hasChildren: boolean;
   expanded: boolean;
@@ -35,5 +35,5 @@ export type LeaderNodeData = {
 
 export type SubNodeData = {
   name: string;
-  pid: number;
+  pid: string;
 };

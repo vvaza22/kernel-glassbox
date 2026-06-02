@@ -1,4 +1,4 @@
-import type { TaskKey } from "./shared";
+import type { WebsocketTaskKey } from "./shared";
 
 export type WebsocketSchedData = {
   prio: string;
@@ -108,8 +108,8 @@ export type WebsocketTaskviewData = {
   tgid: string;
   startTime: string;
   comm: string;
-  parent: TaskKey;
-  realParent: TaskKey;
+  parent: WebsocketTaskKey;
+  realParent: WebsocketTaskKey;
 
   // State
   state: string;

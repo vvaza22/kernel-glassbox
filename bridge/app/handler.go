@@ -69,9 +69,8 @@ func (h *handler) OnClientMessage(msg model.WSMessage) {
 		}
 		h.handleVMEDump(req)
 	case model.WSMsgClientReqTaskview:
-		req := model.TaskKey{}
-		err := json.Unmarshal(msg.Payload, &req)
-		if err != nil {
+		req := model.WebsocketTaskKey{}
+		if err := json.Unmarshal(msg.Payload, &req); err != nil {
 			// TODO: Send error message back to client
 			return
 		}
@@ -129,7 +128,7 @@ func (h *handler) handleProctreeDump() {
 	h.sendMessage(respMsg)
 }
 
-func (h *handler) handleTaskView(key model.TaskKey) {
+func (h *handler) handleTaskView(key model.WebsocketTaskKey) {
 	data, err := h.taskview.View(key)
 	if err != nil {
 		return

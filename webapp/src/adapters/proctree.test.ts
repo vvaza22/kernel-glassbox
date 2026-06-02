@@ -1,17 +1,20 @@
 import { expect, test } from "vitest";
 import { toTreeNodes } from "./proctree";
 import type { TreeNode } from "@/types/ui/proctree";
+import type { WebsocketTaskKey } from "@/types/ws/shared";
+import type { ProctreeNode } from "@/types/ws/proctree";
 
 // TODO: toTreeNodes does not guarantee the order, make tests more general
 
-const rootKey = { pid: 0, startTime: 0 };
-const fakeKey = { pid: -1, startTime: -1 };
+const rootKey: WebsocketTaskKey = { pid: "0", startTime: "0" };
+const fakeKey: WebsocketTaskKey = { pid: "-1", startTime: "-1" };
 const rootTreeNode: TreeNode = {
   id: "0-0",
   parentId: "",
   parentTreeNodeId: "",
-  name: "swapper",
-  pid: 0,
+  name: "swapper/0",
+  pid: "0",
+  startTime: "0",
   subNodes: [],
   childTreeNodeIds: [],
 };
@@ -21,8 +24,9 @@ test("toTreeNodes returns root node on empty input", () => {
 });
 
 test("toTreeNodes handles root with multiple children", () => {
-  const keyA = { pid: 1, startTime: 100 };
-  const keyB = { pid: 2, startTime: 200 };
+  const keyA: WebsocketTaskKey = { pid: "1", startTime: "100" };
+  const keyB: WebsocketTaskKey = { pid: "2", startTime: "200" };
+
   const nodes = [
     {
       parent: fakeKey,
@@ -39,7 +43,8 @@ test("toTreeNodes handles root with multiple children", () => {
       name: "B",
     },
   ];
-  expect(toTreeNodes(nodes)).toEqual([
+
+  const expectedNodes: TreeNode[] = [
     {
       ...rootTreeNode,
       childTreeNodeIds: ["1-100", "2-200"],
@@ -50,6 +55,7 @@ test("toTreeNodes handles root with multiple children", () => {
       parentTreeNodeId: "0-0",
       name: "A",
       pid: keyA.pid,
+      startTime: keyA.startTime,
       subNodes: [],
       childTreeNodeIds: [],
     },
@@ -59,16 +65,19 @@ test("toTreeNodes handles root with multiple children", () => {
       parentTreeNodeId: "0-0",
       name: "B",
       pid: keyB.pid,
+      startTime: keyB.startTime,
       subNodes: [],
       childTreeNodeIds: [],
     },
-  ]);
+  ];
+
+  expect(toTreeNodes(nodes)).toEqual(expectedNodes);
 });
 
 test("toTreeNodes handles sub nodes", () => {
-  const keyA = { pid: 10, startTime: 100 };
-  const keyB = { pid: 20, startTime: 200 };
-  const nodes = [
+  const keyA: WebsocketTaskKey = { pid: "10", startTime: "100" };
+  const keyB: WebsocketTaskKey = { pid: "20", startTime: "200" };
+  const nodes: ProctreeNode[] = [
     {
       parent: fakeKey,
       realParent: rootKey,
@@ -80,7 +89,7 @@ test("toTreeNodes handles sub nodes", () => {
       parent: fakeKey,
       realParent: rootKey,
       groupLeader: keyA,
-      self: { pid: 11, startTime: 110 },
+      self: { pid: "11", startTime: "110" },
       name: "A1",
     },
     {
@@ -94,18 +103,18 @@ test("toTreeNodes handles sub nodes", () => {
       parent: fakeKey,
       realParent: rootKey,
       groupLeader: keyB,
-      self: { pid: 21, startTime: 210 },
+      self: { pid: "21", startTime: "210" },
       name: "B1",
     },
     {
       parent: fakeKey,
       realParent: rootKey,
       groupLeader: keyB,
-      self: { pid: 22, startTime: 220 },
+      self: { pid: "22", startTime: "220" },
       name: "B2",
     },
   ];
-  expect(toTreeNodes(nodes)).toEqual([
+  const expectedNodes: TreeNode[] = [
     {
       ...rootTreeNode,
       childTreeNodeIds: ["10-100", "20-200"],
@@ -116,11 +125,12 @@ test("toTreeNodes handles sub nodes", () => {
       parentTreeNodeId: "0-0",
       name: "A",
       pid: keyA.pid,
+      startTime: keyA.startTime,
       subNodes: [
         {
           id: "11-110",
           name: "A1",
-          pid: 11,
+          pid: "11",
         },
       ],
       childTreeNodeIds: [],
@@ -131,33 +141,35 @@ test("toTreeNodes handles sub nodes", () => {
       parentTreeNodeId: "0-0",
       name: "B",
       pid: keyB.pid,
+      startTime: keyB.startTime,
       subNodes: [
         {
           id: "21-210",
           name: "B1",
-          pid: 21,
+          pid: "21",
         },
         {
           id: "22-220",
           name: "B2",
-          pid: 22,
+          pid: "22",
         },
       ],
       childTreeNodeIds: [],
     },
-  ]);
+  ];
+  expect(toTreeNodes(nodes)).toEqual(expectedNodes);
 });
 
 test("toTreeNodes handles deep trees", () => {
-  const keyA = { pid: 1, startTime: 100 };
-  const keyB = { pid: 2, startTime: 200 };
-  const keyC = { pid: 3, startTime: 300 };
-  const keyD = { pid: 40, startTime: 4000 };
-  const keyD1 = { pid: 41, startTime: 4100 };
-  const keyE = { pid: 5, startTime: 500 };
-  const keyF = { pid: 6, startTime: 600 };
+  const keyA = { pid: "1", startTime: "100" };
+  const keyB = { pid: "2", startTime: "200" };
+  const keyC = { pid: "3", startTime: "300" };
+  const keyD = { pid: "40", startTime: "4000" };
+  const keyD1 = { pid: "41", startTime: "4100" };
+  const keyE = { pid: "5", startTime: "500" };
+  const keyF = { pid: "6", startTime: "600" };
 
-  const nodes = [
+  const nodes: ProctreeNode[] = [
     {
       parent: fakeKey,
       realParent: rootKey,
@@ -224,6 +236,7 @@ test("toTreeNodes handles deep trees", () => {
     parentTreeNodeId: "0-0",
     name: "A",
     pid: keyA.pid,
+    startTime: keyA.startTime,
     subNodes: [],
     childTreeNodeIds: ["2-200"],
   });
@@ -234,6 +247,7 @@ test("toTreeNodes handles deep trees", () => {
     parentTreeNodeId: "1-100",
     name: "B",
     pid: keyB.pid,
+    startTime: keyB.startTime,
     subNodes: [],
     childTreeNodeIds: [],
   });
@@ -244,6 +258,7 @@ test("toTreeNodes handles deep trees", () => {
     parentTreeNodeId: "0-0",
     name: "C",
     pid: keyC.pid,
+    startTime: keyC.startTime,
     subNodes: [],
     childTreeNodeIds: ["40-4000"],
   });
@@ -254,6 +269,7 @@ test("toTreeNodes handles deep trees", () => {
     parentTreeNodeId: "3-300",
     name: "D",
     pid: keyD.pid,
+    startTime: keyD.startTime,
     subNodes: [
       {
         id: "41-4100",
@@ -270,6 +286,7 @@ test("toTreeNodes handles deep trees", () => {
     parentTreeNodeId: "40-4000",
     name: "E",
     pid: keyE.pid,
+    startTime: keyE.startTime,
     subNodes: [],
     childTreeNodeIds: [],
   });
@@ -280,6 +297,7 @@ test("toTreeNodes handles deep trees", () => {
     parentTreeNodeId: "40-4000",
     name: "F",
     pid: keyF.pid,
+    startTime: keyF.startTime,
     subNodes: [],
     childTreeNodeIds: [],
   });

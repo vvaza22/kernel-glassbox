@@ -82,7 +82,7 @@ function SubNode({ data }: NodeProps<Node<SubNodeData>>) {
 
 function LeaderNode({ data }: NodeProps<Node<LeaderNodeData>>) {
   const [width, height] = leaderDims(data.numSubNodes);
-  const isRoot = data.pid === 0;
+  const isRoot = data.pid === "0";
 
   return (
     <div

@@ -6,7 +6,7 @@ import (
 )
 
 type ProctreeManager interface {
-	Dump() ([]model.ProctreeNode, error)
+	Dump() ([]model.WebsocketProctreeNode, error)
 }
 
 type proctreeManager struct {
@@ -19,6 +19,16 @@ func NewProctreeManager(proctreeClient nlclient.ProctreeClient) ProctreeManager 
 	}
 }
 
-func (pm *proctreeManager) Dump() ([]model.ProctreeNode, error) {
-	return pm.proctreeClient.Dump()
+func (pm *proctreeManager) Dump() ([]model.WebsocketProctreeNode, error) {
+	nodes, err := pm.proctreeClient.Dump()
+	if err != nil {
+		return nil, err
+	}
+
+	wsNodes := make([]model.WebsocketProctreeNode, len(nodes))
+	for i, node := range nodes {
+		wsNodes[i] = model.ToWebsocketProctreeNode(node)
+	}
+
+	return wsNodes, nil
 }

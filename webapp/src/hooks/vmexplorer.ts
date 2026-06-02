@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useWSStore } from "@/stores/ws";
 import { WSMsgType, WSStatus } from "@/types/ws";
 import { error } from "@/helpers/logger";
-import type { TaskKey } from "@/types/ws/shared";
+import type { WebsocketTaskKey } from "@/types/ws/shared";
 import {
   isWebsocketVMEDump,
   type VMEPath,
@@ -25,7 +25,7 @@ export default function useVME() {
     setEntries(data.entries);
   };
 
-  const explore = (key: TaskKey, path: VMEPath) => {
+  const explore = (key: WebsocketTaskKey, path: VMEPath) => {
     const req: WebsocketVMEReq = {
       key,
       path,

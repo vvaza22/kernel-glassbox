@@ -6,7 +6,7 @@ import (
 )
 
 type TaskviewManager interface {
-	View(key model.TaskKey) (*model.WebsocketTaskviewData, error)
+	View(wsKey model.WebsocketTaskKey) (*model.WebsocketTaskviewData, error)
 }
 
 type taskviewManager struct {
@@ -19,7 +19,12 @@ func NewTaskviewManager(taskviewClient nlclient.TaskviewClient) TaskviewManager 
 	}
 }
 
-func (m *taskviewManager) View(key model.TaskKey) (*model.WebsocketTaskviewData, error) {
+func (m *taskviewManager) View(wsKey model.WebsocketTaskKey) (*model.WebsocketTaskviewData, error) {
+	key, err := model.ToTaskKey(wsKey)
+	if err != nil {
+		return nil, err
+	}
+
 	data, err := m.taskviewClient.Get(key)
 	if err != nil {
 		return nil, err

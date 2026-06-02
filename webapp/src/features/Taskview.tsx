@@ -16,8 +16,8 @@ export default function Taskview() {
   useEffect(() => {
     if (!connected) return;
     const key = {
-      pid: parseInt(pid, 10),
-      startTime: parseInt(startTime, 10),
+      pid: pid,
+      startTime: startTime,
     };
     getView(key);
   }, [connected]);

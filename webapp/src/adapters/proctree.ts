@@ -1,5 +1,5 @@
 import type { ProctreeNode } from "@/types/ws/proctree";
-import type { TaskKey } from "@/types/ws/shared";
+import type { WebsocketTaskKey } from "@/types/ws/shared";
 import type {
   SubTreeNode,
   TreeNode,
@@ -14,8 +14,8 @@ import {
   SUB_NODES_GAP,
 } from "@/config/proctree";
 
-const toId = (key: TaskKey) => `${key.pid}-${key.startTime}`;
-export const kernelId = toId({ pid: 0, startTime: 0 });
+const toId = (key: WebsocketTaskKey) => `${key.pid}-${key.startTime}`;
+export const kernelId = toId({ pid: "0", startTime: "0" });
 
 const isGroupLeader = (node: ProctreeNode) => {
   // A thread is a group leader, iff its self id matches its group leader id
@@ -87,9 +87,9 @@ export function toTreeNodes(nodes: ProctreeNode[]): TreeNode[] {
     id: kernelId,
     parentId: "",
     parentTreeNodeId: "",
-    name: "swapper",
-    pid: 0,
-    startTime: 0,
+    name: "swapper/0",
+    pid: "0",
+    startTime: "0",
     subNodes: [],
     childTreeNodeIds: tgidToChildTgids.get(kernelId) || [],
   };

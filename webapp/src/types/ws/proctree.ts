@@ -1,11 +1,11 @@
-import type { TaskKey } from "./shared";
-import { isTaskKey } from "./shared";
+import type { WebsocketTaskKey } from "./shared";
+import { isWebsocketTaskKey } from "./shared";
 
 export type ProctreeNode = {
-  parent: TaskKey;
-  realParent: TaskKey;
-  groupLeader: TaskKey;
-  self: TaskKey;
+  parent: WebsocketTaskKey;
+  realParent: WebsocketTaskKey;
+  groupLeader: WebsocketTaskKey;
+  self: WebsocketTaskKey;
   name: string;
 };
 
@@ -13,10 +13,10 @@ export function isProctreeNode(obj: any): obj is ProctreeNode {
   return (
     obj !== null &&
     typeof obj === "object" &&
-    isTaskKey(obj.parent) &&
-    isTaskKey(obj.realParent) &&
-    isTaskKey(obj.groupLeader) &&
-    isTaskKey(obj.self) &&
+    isWebsocketTaskKey(obj.parent) &&
+    isWebsocketTaskKey(obj.realParent) &&
+    isWebsocketTaskKey(obj.groupLeader) &&
+    isWebsocketTaskKey(obj.self) &&
     typeof obj.name === "string"
   );
 }
