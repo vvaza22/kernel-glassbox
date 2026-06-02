@@ -2,6 +2,14 @@ import type { TreeNode, Pos } from "@/types/ui/proctree";
 import type { NestedNode } from "@/types/flextree";
 import { flextree } from "d3-flextree";
 import type { FlextreeNode } from "d3-flextree";
+import {
+  LEADER_BASE_WIDTH,
+  LEADER_BASE_HEIGHT,
+  SUB_NODE_HEIGHT,
+  SUB_NODES_GAP,
+  MIN_VERTICAL_SPACE_BETWEEN_NODES,
+  VERTICAL_SPACE_GROWTH_CAP,
+} from "@/config/proctree";
 
 function toNestedNode(
   nodes: TreeNode[],
@@ -104,4 +112,20 @@ export function withinThreshold(
   return (
     Math.max(Math.abs(pos1.x - pos2.x), Math.abs(pos1.y - pos2.y)) < threshold
   );
+}
+
+export function verticalSpacer(numChildren: number) {
+  return (
+    MIN_VERTICAL_SPACE_BETWEEN_NODES *
+    Math.min(VERTICAL_SPACE_GROWTH_CAP, numChildren)
+  );
+}
+
+export function leaderDims(numSubNodes: number): [number, number] {
+  return [
+    LEADER_BASE_WIDTH,
+    LEADER_BASE_HEIGHT +
+      numSubNodes * SUB_NODE_HEIGHT +
+      2 * SUB_NODES_GAP * Math.min(1, numSubNodes),
+  ];
 }
