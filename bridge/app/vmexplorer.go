@@ -6,7 +6,7 @@ import (
 )
 
 type VMExplorerManager interface {
-	Explore(key model.TaskKey, path model.VMEPath) ([]model.WebsocketVMEntry, error)
+	Explore(key model.WebsocketTaskKey, path model.VMEPath) ([]model.WebsocketVMEntry, error)
 }
 
 type vmExplorerManager struct {
@@ -19,8 +19,13 @@ func NewVMExplorerManager(vmeClient nlclient.VMExplorerClient) VMExplorerManager
 	}
 }
 
-func (m *vmExplorerManager) Explore(key model.TaskKey, path model.VMEPath) ([]model.WebsocketVMEntry, error) {
+func (m *vmExplorerManager) Explore(wsKey model.WebsocketTaskKey, path model.VMEPath) ([]model.WebsocketVMEntry, error) {
 	result := make([]model.WebsocketVMEntry, 0)
+
+	key, err := model.ToTaskKey(wsKey)
+	if err != nil {
+		return nil, err
+	}
 
 	dump, err := m.vmeClient.Dump(key, path)
 	if err != nil {

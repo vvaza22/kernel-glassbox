@@ -83,8 +83,8 @@ func ToWebsocketVMEntry(entry NetlinkVMEntry, index int) WebsocketVMEntry {
 }
 
 type WebsocketVMEReq struct {
-	Key  TaskKey `json:"key"`
-	Path VMEPath `json:"path"`
+	Key  WebsocketTaskKey `json:"key"`
+	Path VMEPath          `json:"path"`
 }
 
 type WebsocketVMEDump struct {

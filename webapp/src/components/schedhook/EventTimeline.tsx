@@ -1,14 +1,16 @@
+import { type ReactNode } from "react";
 import type { DataItem } from "vis-timeline";
-import type { SchedTask } from "@/types/ui/schedhook";
+import type { SchedEvent } from "@/types/ui/schedhook";
 import type { GroupItem } from "@/components/schedhook/VisTimeline";
 import VisTimeline from "@/components/schedhook/VisTimeline";
 import { cn } from "@/shadcn/lib/utils";
+import { renderToStaticMarkup } from "react-dom/server";
 
 type EventTimelineProps = {
-  events: SchedTask[];
+  events: SchedEvent[];
 };
 
-function toGroupItems(events: SchedTask[]): GroupItem[] {
+function toGroupItems(events: SchedEvent[]): GroupItem[] {
   const cpuSet = new Set<number>(events.map((ev) => ev.cpu));
   return Array.from(cpuSet)
     .sort()
@@ -22,24 +24,51 @@ function normTimestamp(ts: bigint): number {
   return Number(BigInt(ts));
 }
 
-function toClassName(ev: SchedTask): string {
-  if (ev.key.pid === 0) {
-    return "!bg-neutral-500 !opacity-50 hover:!opacity-100 !border !border-gray-900";
+function toClassName(ev: SchedEvent): string {
+  if (ev.key.pid === "0") {
+    return "!bg-yellow-950 hover:!bg-yellow-900 !text-yellow-300 !border !border-yellow-800";
   }
   if (ev.kthread) {
-    return "!bg-red-400 !opacity-50 hover:!opacity-100 !border !border-red-900";
+    return "!bg-red-950 hover:!bg-red-900 !text-red-300 !border !border-red-800";
   }
-  return "!bg-blue-400 !opacity-50 hover:!opacity-100 !border !border-blue-900";
+  return "!bg-blue-950 hover:!bg-blue-900 !text-blue-300 !border !border-blue-800";
 }
 
-function toDataItems(events: SchedTask[]): DataItem[] {
+function TooltipItem({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex justify-between w-full">
+      <span className="text-sm font-mono text-muted-foreground">{label}:</span>
+      <span className="text-sm font-mono text-foreground">{value}</span>
+    </div>
+  );
+}
+
+function toTooltip(ev: SchedEvent): ReactNode {
+  return (
+    <div
+      className={cn(
+        "p-2 w-[400px]",
+        "border border-border",
+        "flex flex-col gap-2",
+        "bg-zinc-950",
+      )}
+    >
+      <TooltipItem label="Comm" value={ev.name} />
+      <TooltipItem label="Interval" value={`[${ev.start}, ${ev.end})`} />
+      <TooltipItem label="Duration" value={`${ev.duration} ns`} />
+      <TooltipItem label="PID" value={ev.key.pid} />
+    </div>
+  );
+}
+
+function toDataItems(events: SchedEvent[]): DataItem[] {
   return events.map((ev, index) => ({
     id: index,
     group: ev.cpu,
-    content: `${ev.name} (PID: ${ev.key.pid})`,
+    content: ev.name,
     start: normTimestamp(ev.startNorm),
     end: normTimestamp(ev.endNorm),
-    title: `Interval: [${ev.start}, ${ev.end}) Duration: ${ev.duration} ns`,
+    title: renderToStaticMarkup(toTooltip(ev)),
     className: toClassName(ev),
   }));
 }
@@ -48,15 +77,20 @@ export default function EventTimeline({ events }: EventTimelineProps) {
   return (
     <div
       className={cn(
-        "w-full h-[300px]",
+        "w-full",
         "flex items-center justify-center",
-        "border border-border rounded",
+        events.length === 0 ? "border border-border rounded-md h-64" : "",
       )}
     >
       {events.length === 0 ? (
-        <p className="text-mono text-md">
-          Press <b>Start Capture</b>, wait few seconds and press{" "}
-          <b>End capture</b> to display the captured events
+        <p className="flex flex-col items-center justify-center gap-2">
+          <span className="text-foreground text-mono">
+            <b>Start Capture</b> - Begins capturing scheduler events
+          </span>
+          <span className="text-foreground text-mono">
+            <b>End Capture</b> - Ends capture and displays events on the
+            timeline
+          </span>
         </p>
       ) : (
         <VisTimeline

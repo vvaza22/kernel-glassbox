@@ -2,7 +2,7 @@ import useTaskview from "@/hooks/taskview";
 import { useEffect } from "react";
 import { useParams } from "wouter";
 import { useTranslation } from "react-i18next";
-import Loader from "@/components/ui/Loader";
+import Loader from "@/components/shared/Loader";
 import View from "@/components/taskview/View";
 
 export default function Taskview() {
@@ -16,8 +16,8 @@ export default function Taskview() {
   useEffect(() => {
     if (!connected) return;
     const key = {
-      pid: parseInt(pid, 10),
-      startTime: parseInt(startTime, 10),
+      pid: pid,
+      startTime: startTime,
     };
     getView(key);
   }, [connected]);

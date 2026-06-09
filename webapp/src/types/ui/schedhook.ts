@@ -1,7 +1,7 @@
-import type { TaskKey } from "../ws/shared";
+import type { WebsocketTaskKey } from "../ws/shared";
 
-export type SchedTask = {
-  key: TaskKey;
+export type SchedEvent = {
+  key: WebsocketTaskKey;
   name: string;
   cpu: number;
   start: bigint;

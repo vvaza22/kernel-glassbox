@@ -1,30 +1,37 @@
-import type { SchedEvent } from "@/types/ws/schedhook";
-import type { SchedTask } from "@/types/ui/schedhook";
+import type { WebsocketSchedEvent } from "@/types/ws/schedhook";
+import type { SchedEvent } from "@/types/ui/schedhook";
 import { bigIntComparator } from "@/helpers/math";
 
-function toSchedTask(cur: SchedEvent, next: SchedEvent): SchedTask {
+function toSchedTask(
+  cur: WebsocketSchedEvent,
+  next: WebsocketSchedEvent,
+): SchedEvent {
+  const curTimestamp = BigInt(cur.timestamp);
+  const nextTimestamp = BigInt(next.timestamp);
   return {
     key: cur.next,
     name: cur.commNext,
     cpu: cur.cpu,
-    start: cur.timestamp,
-    end: next.timestamp,
-    startNorm: cur.timestamp,
-    endNorm: next.timestamp,
-    duration: next.timestamp - cur.timestamp,
+    start: curTimestamp,
+    end: nextTimestamp,
+    startNorm: curTimestamp,
+    endNorm: nextTimestamp,
+    duration: nextTimestamp - curTimestamp,
     kthread: cur.nextIsKthread,
   };
 }
 
-function toSchedTaskPerCPU(events: SchedEvent[]): SchedTask[] {
-  const result: SchedTask[] = [];
+function toSchedTaskPerCPU(events: WebsocketSchedEvent[]): SchedEvent[] {
+  const result: SchedEvent[] = [];
 
   if (events.length === 0) {
     return result;
   }
 
   // Sort events by timestamp in ascending order
-  events.sort((a, b) => bigIntComparator(a.timestamp, b.timestamp));
+  events.sort((a, b) =>
+    bigIntComparator(BigInt(a.timestamp), BigInt(b.timestamp)),
+  );
 
   for (let i = 0; i < events.length - 1; i++) {
     result.push(toSchedTask(events[i], events[i + 1]));
@@ -33,9 +40,9 @@ function toSchedTaskPerCPU(events: SchedEvent[]): SchedTask[] {
   return result;
 }
 
-export function toSchedTasks(events: SchedEvent[]): SchedTask[] {
-  const result: SchedTask[] = [];
-  const byCPU = new Map<number, SchedEvent[]>();
+export function toSchedEvents(events: WebsocketSchedEvent[]): SchedEvent[] {
+  const result: SchedEvent[] = [];
+  const byCPU = new Map<number, WebsocketSchedEvent[]>();
 
   if (events.length === 0) {
     return result;

@@ -13,6 +13,7 @@ struct gb_proctree_node {
 	struct gb_task_key group_leader;
 	struct gb_task_key self;
 	char name[TASK_COMM_LEN];
+	bool is_kthread;
 };
 
 struct gb_proctree {

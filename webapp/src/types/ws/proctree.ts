@@ -1,26 +1,44 @@
-import type { TaskKey } from "./shared";
-import { isTaskKey } from "./shared";
+import type { WebsocketTaskKey } from "./shared";
+import { isWebsocketTaskKey } from "./shared";
 
 export type ProctreeNode = {
-  parent: TaskKey;
-  realParent: TaskKey;
-  groupLeader: TaskKey;
-  self: TaskKey;
+  parent: WebsocketTaskKey;
+  realParent: WebsocketTaskKey;
+  groupLeader: WebsocketTaskKey;
+  self: WebsocketTaskKey;
   name: string;
+  isKthread: boolean;
 };
 
 export function isProctreeNode(obj: any): obj is ProctreeNode {
   return (
     obj !== null &&
     typeof obj === "object" &&
-    isTaskKey(obj.parent) &&
-    isTaskKey(obj.realParent) &&
-    isTaskKey(obj.groupLeader) &&
-    isTaskKey(obj.self) &&
+    isWebsocketTaskKey(obj.parent) &&
+    isWebsocketTaskKey(obj.realParent) &&
+    isWebsocketTaskKey(obj.groupLeader) &&
+    isWebsocketTaskKey(obj.self) &&
+    typeof obj.isKthread === "boolean" &&
     typeof obj.name === "string"
   );
 }
 
 export function isProctreeNodeArray(obj: any): obj is ProctreeNode[] {
   return Array.isArray(obj) && obj.every((item) => isProctreeNode(item));
+}
+
+export type WebsocketProctreeDump = {
+  nodes: ProctreeNode[];
+  timeFormatted: string;
+};
+
+export function isWebsocketProctreeDump(
+  obj: any,
+): obj is WebsocketProctreeDump {
+  return (
+    obj !== null &&
+    typeof obj === "object" &&
+    isProctreeNodeArray(obj.nodes) &&
+    typeof obj.timeFormatted === "string"
+  );
 }

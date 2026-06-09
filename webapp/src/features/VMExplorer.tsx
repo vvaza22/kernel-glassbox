@@ -23,10 +23,7 @@ export function VMExplorer() {
     debug("Params:", params);
     debug(`VME (${pid}, ${startTime})`);
     debug("Path:", pathObj);
-    explore(
-      { pid: parseInt(pid, 10), startTime: parseInt(startTime, 10) },
-      pathObj,
-    );
+    explore({ pid: pid, startTime: startTime }, pathObj);
   }, [params, connected]);
 
   const indicesToLink = (indices?: number[]) => {

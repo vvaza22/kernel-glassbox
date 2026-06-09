@@ -5,29 +5,13 @@ import (
 	"fmt"
 )
 
-type TaskKey struct {
-	Pid       uint32 `json:"pid"`
-	StartTime uint64 `json:"startTime"`
-}
-
-func (tk TaskKey) String() string {
-	return fmt.Sprintf("(%d,%d)", tk.Pid, tk.StartTime)
-}
-
-func ReadTaskKey(parser utils.ByteParser) (TaskKey, error) {
-	var tk TaskKey
-	tk.Pid = parser.ReadUint32()
-	parser.Padding(4)
-	tk.StartTime = parser.ReadUint64()
-	return tk, parser.Error()
-}
-
 type ProctreeNode struct {
 	Parent      TaskKey `json:"parent"`
 	RealParent  TaskKey `json:"realParent"`
 	GroupLeader TaskKey `json:"groupLeader"`
 	Self        TaskKey `json:"self"`
 	Name        string  `json:"name"`
+	IsKthread   bool    `json:"isKthread"`
 }
 
 func (n ProctreeNode) String() string {
@@ -42,6 +26,32 @@ func ReadProctreeNode(parser utils.ByteParser) (ProctreeNode, error) {
 	node.GroupLeader, _ = ReadTaskKey(parser)
 	node.Self, _ = ReadTaskKey(parser)
 	node.Name = parser.ReadString(16)
+	node.IsKthread = parser.ReadBool()
 
 	return node, parser.Error()
+}
+
+type WebsocketProctreeNode struct {
+	Parent      WebsocketTaskKey `json:"parent"`
+	RealParent  WebsocketTaskKey `json:"realParent"`
+	GroupLeader WebsocketTaskKey `json:"groupLeader"`
+	Self        WebsocketTaskKey `json:"self"`
+	Name        string           `json:"name"`
+	IsKthread   bool             `json:"isKthread"`
+}
+
+func ToWebsocketProctreeNode(node ProctreeNode) WebsocketProctreeNode {
+	return WebsocketProctreeNode{
+		Parent:      ToWebsocketTaskKey(node.Parent),
+		RealParent:  ToWebsocketTaskKey(node.RealParent),
+		GroupLeader: ToWebsocketTaskKey(node.GroupLeader),
+		Self:        ToWebsocketTaskKey(node.Self),
+		Name:        node.Name,
+		IsKthread:   node.IsKthread,
+	}
+}
+
+type WebsocketProctreeDump struct {
+	Nodes         []WebsocketProctreeNode `json:"nodes"`
+	TimeFormatted string                  `json:"timeFormatted"`
 }

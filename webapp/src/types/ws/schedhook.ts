@@ -1,37 +1,37 @@
-import type { TaskKey } from "./shared";
-import { isTaskKey } from "./shared";
+import type { WebsocketTaskKey } from "./shared";
+import { isWebsocketTaskKey } from "./shared";
 
-export type SchedEvent = {
-  prev: TaskKey;
-  next: TaskKey;
+export type WebsocketSchedEvent = {
+  prev: WebsocketTaskKey;
+  next: WebsocketTaskKey;
   commPrev: string;
   commNext: string;
-  timestamp: bigint;
+  timestamp: string;
   cpu: number;
   prevIsKthread: boolean;
   nextIsKthread: boolean;
 };
 
-export function isSchedEvent(obj: any): obj is SchedEvent {
+export function isSchedEvent(obj: any): obj is WebsocketSchedEvent {
   return (
     obj !== null &&
     typeof obj === "object" &&
-    isTaskKey(obj.prev) &&
-    isTaskKey(obj.next) &&
+    isWebsocketTaskKey(obj.prev) &&
+    isWebsocketTaskKey(obj.next) &&
     typeof obj.commPrev === "string" &&
     typeof obj.commNext === "string" &&
-    typeof obj.timestamp === "number" &&
+    typeof obj.timestamp === "string" &&
     typeof obj.cpu === "number" &&
     typeof obj.prevIsKthread === "boolean" &&
     typeof obj.nextIsKthread === "boolean"
   );
 }
 
-export type SchedCap = {
-  events: SchedEvent[];
+export type WebsocketSchedCap = {
+  events: WebsocketSchedEvent[];
 };
 
-export function isSchedCap(obj: any): obj is SchedCap {
+export function isSchedCap(obj: any): obj is WebsocketSchedCap {
   return (
     obj !== null &&
     typeof obj === "object" &&

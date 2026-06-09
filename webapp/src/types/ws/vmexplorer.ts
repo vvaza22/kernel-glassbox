@@ -1,4 +1,4 @@
-import type { TaskKey } from "./shared";
+import type { WebsocketTaskKey } from "./shared";
 
 export const VME_UNSPEC_INDEX: number = -1;
 
@@ -54,6 +54,6 @@ export type VMEPath = {
 };
 
 export type WebsocketVMEReq = {
-  key: TaskKey;
+  key: WebsocketTaskKey;
   path: VMEPath;
 };

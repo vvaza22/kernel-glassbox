@@ -2,7 +2,9 @@ import { useEffect, useState } from "react";
 import { useWSStore } from "@/stores/ws";
 import { WSMsgType, WSStatus } from "@/types/ws";
 import { error } from "@/helpers/logger";
-import { isSchedCap, type SchedEvent } from "@/types/ws/schedhook";
+import { isSchedCap } from "@/types/ws/schedhook";
+import type { SchedEvent } from "@/types/ui/schedhook";
+import { toSchedEvents } from "@/adapters/schedhook";
 
 export default function useSchedhook() {
   const subscribe = useWSStore((s) => s.subscribe);
@@ -16,7 +18,7 @@ export default function useSchedhook() {
       error("Received invalid schedhook capture data", data);
       return;
     }
-    setEvents(data.events);
+    setEvents(toSchedEvents(data.events));
   };
 
   const startCapture = () => {

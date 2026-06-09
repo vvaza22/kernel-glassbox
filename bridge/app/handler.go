@@ -69,9 +69,8 @@ func (h *handler) OnClientMessage(msg model.WSMessage) {
 		}
 		h.handleVMEDump(req)
 	case model.WSMsgClientReqTaskview:
-		req := model.TaskKey{}
-		err := json.Unmarshal(msg.Payload, &req)
-		if err != nil {
+		req := model.WebsocketTaskKey{}
+		if err := json.Unmarshal(msg.Payload, &req); err != nil {
 			// TODO: Send error message back to client
 			return
 		}
@@ -117,19 +116,22 @@ func (h *handler) handleCapEnd() {
 }
 
 func (h *handler) handleProctreeDump() {
-	nodes, err := h.proctree.Dump()
+	err := h.proctree.Register(h.id, h)
 	if err != nil {
-		// TODO: Log the error and send an error message back to the client
+		// TODO: Send error message back to client
 		return
 	}
-	respMsg, err := model.NewWSMsg(model.WSMsgSrvProctreeDump, nodes)
+}
+
+func (h *handler) OnProctreeDump(dump *model.WebsocketProctreeDump) {
+	respMsg, err := model.NewWSMsg(model.WSMsgSrvProctreeDump, dump)
 	if err != nil {
 		return
 	}
 	h.sendMessage(respMsg)
 }
 
-func (h *handler) handleTaskView(key model.TaskKey) {
+func (h *handler) handleTaskView(key model.WebsocketTaskKey) {
 	data, err := h.taskview.View(key)
 	if err != nil {
 		return
@@ -151,4 +153,5 @@ func (h *handler) sendMessage(msg model.WSMessage) {
 
 func (h *handler) Destroy() {
 	close(h.writeCh)
+	h.proctree.Unregister(h.id)
 }

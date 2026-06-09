@@ -49,6 +49,8 @@ func (s *server) Destroy() error {
 		return errors.Wrap(err, "failed to shutdown router")
 	}
 
+	s.app.Destroy()
+
 	err = s.nl.Destroy()
 	if err != nil {
 		return errors.Wrap(err, "failed to destroy netlink client")

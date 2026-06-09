@@ -9,6 +9,7 @@ import (
 type App interface {
 	AddClient(ctx *model.WSContext) ClientMessageListener
 	RemoveClient(clientID string)
+	Destroy()
 }
 
 type app struct {
@@ -59,4 +60,16 @@ func (a *app) RemoveClient(clientID string) {
 
 	handler.Destroy()
 	delete(a.clients, clientID)
+}
+
+func (a *app) Destroy() {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+
+	for _, handler := range a.clients {
+		handler.Destroy()
+	}
+	a.clients = make(map[string]Handler)
+
+	a.proctreeManager.Destroy()
 }
