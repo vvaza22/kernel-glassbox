@@ -64,14 +64,14 @@ func (h *handler) OnClientMessage(msg model.WSMessage) {
 		req := model.WebsocketVMEReq{}
 		err := json.Unmarshal(msg.Payload, &req)
 		if err != nil {
-			// TODO: Send error message back to client
+			fmt.Printf("Invalid VME dump request")
 			return
 		}
 		h.handleVMEDump(req)
 	case model.WSMsgClientReqTaskview:
 		req := model.WebsocketTaskKey{}
 		if err := json.Unmarshal(msg.Payload, &req); err != nil {
-			// TODO: Send error message back to client
+			fmt.Printf("Invalid task view request")
 			return
 		}
 		h.handleTaskView(req)
@@ -82,7 +82,7 @@ func (h *handler) OnClientMessage(msg model.WSMessage) {
 func (h *handler) handleVMEDump(req model.WebsocketVMEReq) {
 	entries, err := h.vme.Explore(req.Key, req.Path)
 	if err != nil {
-		// TODO: Send error message back to client
+		h.sendError("VME Explore failed")
 		return
 	}
 	respMsg, err := model.NewWSMsg(model.WSMsgSrvVMEDump, &model.WebsocketVMEDump{
@@ -97,7 +97,7 @@ func (h *handler) handleVMEDump(req model.WebsocketVMEReq) {
 func (h *handler) handleCapStart() {
 	err := h.schedhook.Start()
 	if err != nil {
-		// TODO: Send error
+		h.sendError("Capture Start Failed")
 		return
 	}
 }
@@ -105,7 +105,7 @@ func (h *handler) handleCapStart() {
 func (h *handler) handleCapEnd() {
 	cap, err := h.schedhook.End()
 	if err != nil {
-		// TODO: Send error
+		h.sendError("Capture End Failed")
 		return
 	}
 	respMsg, err := model.NewWSMsg(model.WSMsgSrvSchedhookCap, cap)
@@ -118,7 +118,7 @@ func (h *handler) handleCapEnd() {
 func (h *handler) handleProctreeDump() {
 	err := h.proctree.Register(h.id, h)
 	if err != nil {
-		// TODO: Send error message back to client
+		h.sendError("Failed to subscribe to Proctree updates")
 		return
 	}
 }
@@ -147,8 +147,18 @@ func (h *handler) sendMessage(msg model.WSMessage) {
 	select {
 	case h.writeCh <- msg:
 	default:
-		// TODO: Log a warning about dropped message
+		fmt.Printf("Failed to send message to client %s", h.id)
 	}
+}
+
+func (h *handler) sendError(msg string) {
+	errMsg, err := model.NewWSMsg(model.WSMsgSrvError, &model.WebsocketError{
+		Message: msg,
+	})
+	if err != nil {
+		return
+	}
+	h.sendMessage(errMsg)
 }
 
 func (h *handler) Destroy() {
