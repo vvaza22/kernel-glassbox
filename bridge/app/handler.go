@@ -4,7 +4,6 @@ import (
 	"bridge/model"
 	"bridge/utils"
 	"encoding/json"
-	"fmt"
 )
 
 type ClientMessageListener interface {
@@ -22,6 +21,7 @@ type handler struct {
 	id string
 	// Ownership of the write channel is transferred to the handler
 	writeCh chan<- model.WSMessage
+	logger  Logger
 
 	proctree  ProctreeManager
 	schedhook SchedhookManager
@@ -36,10 +36,11 @@ type HandlerParams struct {
 	Taskview  TaskviewManager
 }
 
-func NewHandler(ctx *model.WSContext, params *HandlerParams) Handler {
+func NewHandler(ctx *model.WSContext, logger Logger, params *HandlerParams) Handler {
 	return &handler{
 		id:        utils.UID(),
 		writeCh:   ctx.WriteCh,
+		logger:    logger,
 		proctree:  params.Proctree,
 		schedhook: params.Schedhook,
 		vme:       params.VME,
@@ -52,7 +53,7 @@ func (h *handler) ID() string {
 }
 
 func (h *handler) OnClientMessage(msg model.WSMessage) {
-	fmt.Printf("Received message from client %s: %v\n", h.id, msg)
+	h.logger.Debugf("Client Message from %s: %v\n", h.id, msg)
 	switch msg.Type {
 	case model.WSMsgClientReqProctreeDump:
 		h.handleProctreeDump()
@@ -64,14 +65,14 @@ func (h *handler) OnClientMessage(msg model.WSMessage) {
 		req := model.WebsocketVMEReq{}
 		err := json.Unmarshal(msg.Payload, &req)
 		if err != nil {
-			fmt.Printf("Invalid VME dump request")
+			h.logger.Errorf("Invalid VME dump request: %v\n", err)
 			return
 		}
 		h.handleVMEDump(req)
 	case model.WSMsgClientReqTaskview:
 		req := model.WebsocketTaskKey{}
 		if err := json.Unmarshal(msg.Payload, &req); err != nil {
-			fmt.Printf("Invalid task view request")
+			h.logger.Errorf("Invalid task view request: %v\n", err)
 			return
 		}
 		h.handleTaskView(req)
@@ -147,7 +148,7 @@ func (h *handler) sendMessage(msg model.WSMessage) {
 	select {
 	case h.writeCh <- msg:
 	default:
-		fmt.Printf("Failed to send message to client %s", h.id)
+		h.logger.Errorf("Failed to send message to client: %s\n", h.id)
 	}
 }
 
