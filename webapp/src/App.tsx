@@ -4,14 +4,15 @@ import { debug } from "@/helpers/logger";
 import { Route, Switch } from "wouter";
 import Proctree from "@/features/Proctree.tsx";
 import Schedhook from "./features/Schedhook";
+import VMExplorer from "./features/VMExplorer";
+import Taskview from "./features/Taskview";
+import Errors from "./components/shared/Errors";
 
 /* Localisation */
 import "@/localisation/i18n";
 
 /* Tailwind + shadcn UI styles */
 import "@/shadcn/styles/app.css";
-import { VMExplorer } from "./features/VMExplorer";
-import Taskview from "./features/Taskview";
 
 export default function App() {
   const connect = useWSStore((s) => s.connect);
@@ -28,6 +29,7 @@ export default function App() {
 
   return (
     <div className="h-screen w-screen relative">
+      <Errors />
       <Switch>
         <Route path="/">
           <Proctree />

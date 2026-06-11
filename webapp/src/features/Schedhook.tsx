@@ -4,6 +4,8 @@ import EventTimeline from "@/components/schedhook/EventTimeline";
 import "@/styles/schedhook.css";
 import BackLink from "@/components/shared/BackLink";
 
+// TODO: Localisation is not yet done for Schedhook.
+
 export default function Schedhook() {
   const { startCapture, endCapture, events } = useSchedhook();
 

@@ -8,7 +8,7 @@ import { NoEntries } from "@/components/vmexplorer/NoEntries";
 import Entries from "@/components/vmexplorer/Entries";
 import { toIndices, toPathObj, toVMEntry } from "@/adapters/vmexplorer";
 
-export function VMExplorer() {
+export default function VMExplorer() {
   const params = useParams();
   const { explore, entries, connected } = useVME();
   const mappedEntries = entries.filter((e) => !e.none).map(toVMEntry);
