@@ -4,7 +4,6 @@ import (
 	"bridge/model"
 	"bridge/utils"
 	"encoding/json"
-	"fmt"
 )
 
 type ClientMessageListener interface {
@@ -22,6 +21,7 @@ type handler struct {
 	id string
 	// Ownership of the write channel is transferred to the handler
 	writeCh chan<- model.WSMessage
+	logger  Logger
 
 	proctree  ProctreeManager
 	schedhook SchedhookManager
@@ -36,10 +36,11 @@ type HandlerParams struct {
 	Taskview  TaskviewManager
 }
 
-func NewHandler(ctx *model.WSContext, params *HandlerParams) Handler {
+func NewHandler(ctx *model.WSContext, logger Logger, params *HandlerParams) Handler {
 	return &handler{
 		id:        utils.UID(),
 		writeCh:   ctx.WriteCh,
+		logger:    logger,
 		proctree:  params.Proctree,
 		schedhook: params.Schedhook,
 		vme:       params.VME,
@@ -52,7 +53,7 @@ func (h *handler) ID() string {
 }
 
 func (h *handler) OnClientMessage(msg model.WSMessage) {
-	fmt.Printf("Received message from client %s: %v\n", h.id, msg)
+	h.logger.Debugf("Client Message from %s: %v\n", h.id, msg)
 	switch msg.Type {
 	case model.WSMsgClientReqProctreeDump:
 		h.handleProctreeDump()
@@ -64,14 +65,14 @@ func (h *handler) OnClientMessage(msg model.WSMessage) {
 		req := model.WebsocketVMEReq{}
 		err := json.Unmarshal(msg.Payload, &req)
 		if err != nil {
-			// TODO: Send error message back to client
+			h.logger.Errorf("Invalid VME dump request: %v\n", err)
 			return
 		}
 		h.handleVMEDump(req)
 	case model.WSMsgClientReqTaskview:
 		req := model.WebsocketTaskKey{}
 		if err := json.Unmarshal(msg.Payload, &req); err != nil {
-			// TODO: Send error message back to client
+			h.logger.Errorf("Invalid task view request: %v\n", err)
 			return
 		}
 		h.handleTaskView(req)
@@ -82,7 +83,7 @@ func (h *handler) OnClientMessage(msg model.WSMessage) {
 func (h *handler) handleVMEDump(req model.WebsocketVMEReq) {
 	entries, err := h.vme.Explore(req.Key, req.Path)
 	if err != nil {
-		// TODO: Send error message back to client
+		h.sendError("VME Explore failed")
 		return
 	}
 	respMsg, err := model.NewWSMsg(model.WSMsgSrvVMEDump, &model.WebsocketVMEDump{
@@ -97,7 +98,7 @@ func (h *handler) handleVMEDump(req model.WebsocketVMEReq) {
 func (h *handler) handleCapStart() {
 	err := h.schedhook.Start()
 	if err != nil {
-		// TODO: Send error
+		h.sendError("Capture Start Failed")
 		return
 	}
 }
@@ -105,7 +106,7 @@ func (h *handler) handleCapStart() {
 func (h *handler) handleCapEnd() {
 	cap, err := h.schedhook.End()
 	if err != nil {
-		// TODO: Send error
+		h.sendError("Capture End Failed")
 		return
 	}
 	respMsg, err := model.NewWSMsg(model.WSMsgSrvSchedhookCap, cap)
@@ -118,7 +119,7 @@ func (h *handler) handleCapEnd() {
 func (h *handler) handleProctreeDump() {
 	err := h.proctree.Register(h.id, h)
 	if err != nil {
-		// TODO: Send error message back to client
+		// TODO: For now it is better to drop this error if the user is already subscribed.
 		return
 	}
 }
@@ -147,8 +148,18 @@ func (h *handler) sendMessage(msg model.WSMessage) {
 	select {
 	case h.writeCh <- msg:
 	default:
-		// TODO: Log a warning about dropped message
+		h.logger.Errorf("Failed to send message to client: %s\n", h.id)
 	}
+}
+
+func (h *handler) sendError(msg string) {
+	errMsg, err := model.NewWSMsg(model.WSMsgSrvError, &model.WebsocketError{
+		Message: msg,
+	})
+	if err != nil {
+		return
+	}
+	h.sendMessage(errMsg)
 }
 
 func (h *handler) Destroy() {

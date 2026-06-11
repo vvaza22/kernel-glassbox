@@ -15,6 +15,7 @@ type App interface {
 type app struct {
 	mu      sync.RWMutex
 	clients map[string]Handler
+	logger  Logger
 
 	nlClient         nlclient.NetlinkClient
 	proctreeManager  ProctreeManager
@@ -25,6 +26,7 @@ type app struct {
 
 func NewApp(nl nlclient.NetlinkClient) App {
 	return &app{
+		logger:           NewLogger(),
 		clients:          make(map[string]Handler),
 		nlClient:         nl,
 		proctreeManager:  NewProctreeManager(nl.Proctree()),
@@ -38,7 +40,7 @@ func (a *app) AddClient(wsCtx *model.WSContext) ClientMessageListener {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 
-	handler := NewHandler(wsCtx, &HandlerParams{
+	handler := NewHandler(wsCtx, a.logger, &HandlerParams{
 		Proctree:  a.proctreeManager,
 		Schedhook: a.schedhookManager,
 		VME:       a.vmeManager,

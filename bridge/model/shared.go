@@ -51,3 +51,7 @@ func ToTaskKey(wsTaskKey WebsocketTaskKey) (TaskKey, error) {
 		StartTime: startTime,
 	}, nil
 }
+
+type WebsocketError struct {
+	Message string `json:"message"`
+}
