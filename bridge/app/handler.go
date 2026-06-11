@@ -119,7 +119,7 @@ func (h *handler) handleCapEnd() {
 func (h *handler) handleProctreeDump() {
 	err := h.proctree.Register(h.id, h)
 	if err != nil {
-		h.sendError("Failed to subscribe to Proctree updates")
+		// TODO: For now it is better to drop this error if the user is already subscribed.
 		return
 	}
 }
