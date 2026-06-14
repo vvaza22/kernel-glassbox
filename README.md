@@ -27,3 +27,17 @@ Virtual Memory Explorer lets you explore the page tables for each process, see d
 ![Schedhook](assets/schedhook.png)
 
 Scheduler Visualizer lets you capture _sched_switch_ events and visualize per CPU core activity with nanosecond precision.
+
+## Project Structure
+
+### Kernel Out-of-Tree Module (C)
+
+Directly loads into the Linux kernel and communicates to user-space bridge via Generic Netlink protocol.
+
+### Bridge (go)
+
+Bridge connects WebApp(Visualizer) to the Kernel module. It communicates with the kernel via Netlink, processes the received data and acts as a WebSocket server to send the data to web application.
+
+### WebApp(Typescript/React)
+
+Acts as a visualizer. Connects to bridge WebSocket server and subscribes to the events. It can be setup on a remote PC and still connect to the target bridge, given the port is exposed on the target PC.

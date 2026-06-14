@@ -1,0 +1,24 @@
+From 6e64f8c59691e9d81d0c163906b792740e3204d9 Mon Sep 17 00:00:00 2001
+From: vvaza22 <vvaza22@freeuni.edu.ge>
+Date: Sun, 14 Jun 2026 22:03:00 +0400
+Subject: [PATCH] Export sched switch tracepoint
+
+---
+ kernel/sched/core.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/kernel/sched/core.c b/kernel/sched/core.c
+index b1895b330ff0..496c581fa65f 100644
+--- a/kernel/sched/core.c
++++ b/kernel/sched/core.c
+@@ -116,6 +116,7 @@ EXPORT_TRACEPOINT_SYMBOL_GPL(sched_util_est_cfs_tp);
+ EXPORT_TRACEPOINT_SYMBOL_GPL(sched_util_est_se_tp);
+ EXPORT_TRACEPOINT_SYMBOL_GPL(sched_update_nr_running_tp);
+ EXPORT_TRACEPOINT_SYMBOL_GPL(sched_compute_energy_tp);
++EXPORT_TRACEPOINT_SYMBOL_GPL(sched_switch);
+ 
+ DEFINE_PER_CPU_SHARED_ALIGNED(struct rq, runqueues);
+ DEFINE_PER_CPU(struct rnd_state, sched_rnd_state);
+-- 
+2.43.0
+
