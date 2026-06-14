@@ -42,6 +42,8 @@ Bridge connects WebApp(Visualizer) to the Kernel module. It communicates with th
 
 Acts as a visualizer. Connects to bridge WebSocket server and subscribes to the events. It can be setup on a remote PC and still connect to the target bridge, given the port is exposed on the target PC.
 
+> Note: Everything under webapp/src/shadcn is part of shadcn/ui library and NOT my code.
+
 ## Environment Setup
 
 ### Downlaod Linux Kernel v6.12.74 from kernel.org
